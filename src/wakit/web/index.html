@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wakit</title>
+<style>
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --ink: #17201b; --muted: #5d6a63; --line: #e1e6e2;
+  --accent: #128c5e; --accent-ink: #ffffff; --accent-soft: #e3f4ec; --warn: #a15c00; --warn-soft: #fff3df;
+  --danger: #b42318; --danger-soft: #fde8e6; --console: #0f1512; --console-ink: #d7e4dc; --focus: #1e9e6c;
+  --radius: 10px; --shadow: 0 1px 2px rgba(16, 24, 20, .06), 0 4px 16px rgba(16, 24, 20, .05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a;
+    --accent: #2bbf85; --accent-ink: #04120b; --accent-soft: #143326; --warn: #f0b45a; --warn-soft: #2e2413;
+    --danger: #ff7a6e; --danger-soft: #34181a; --console: #07100c; --console-ink: #cfe0d6; --focus: #3ad69a;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a;
+  --accent: #2bbf85; --accent-ink: #04120b; --accent-soft: #143326; --warn: #f0b45a; --warn-soft: #2e2413;
+  --danger: #ff7a6e; --danger-soft: #34181a; --console: #07100c; --console-ink: #cfe0d6; --focus: #3ad69a;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app { display: grid; grid-template-columns: 250px 1fr; grid-template-rows: 56px 1fr; height: 100vh; }
+header { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 15px; }
+.ver { color: var(--muted); font-weight: 500; font-size: 12px; }
+.spacer { flex: 1; }
+.serial { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.serial input { width: 190px; }
+.iconbtn { border: 1px solid var(--line); background: transparent; border-radius: 8px; height: 32px; padding: 0 10px; cursor: pointer; }
+nav { border-right: 1px solid var(--line); overflow: auto; padding: 14px 10px 30px; background: var(--panel); }
+nav h4 { margin: 16px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+nav a { display: block; padding: 7px 10px; border-radius: 7px; color: var(--ink); text-decoration: none; cursor: pointer; }
+nav a small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+nav a:hover { background: var(--bg); }
+nav a.active { background: var(--accent-soft); }
+nav a.active b { color: var(--accent); }
+main { overflow: auto; padding: 26px 30px 60px; min-width: 0; }
+.wrap { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -.02em; }
+h2 { font-size: 16px; margin: 0 0 10px; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.guide ol { margin: 8px 0 0; padding-left: 0; list-style: none; counter-reset: s; }
+.guide li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 7px 0; border-top: 1px dashed var(--line); }
+.guide li:first-child { border-top: 0; }
+.guide li::before { content: counter(s); width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+.guide li a { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
+.guide li a:hover { text-decoration: underline; }
+.guide li span { color: var(--muted); }
+.note { border-radius: 8px; padding: 10px 12px; margin: 12px 0; font-size: 13px; }
+.note.warn { background: var(--warn-soft); color: var(--warn); }
+.note.danger { background: var(--danger-soft); color: var(--danger); }
+.note.info { background: var(--accent-soft); color: var(--ink); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 16px; }
+.tab { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.fields { display: grid; gap: 14px; }
+.field label { display: block; font-weight: 600; margin-bottom: 4px; }
+.field label code { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 6px; }
+.field .req { color: var(--danger); margin-left: 2px; }
+.field .help { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+.row { display: flex; gap: 8px; }
+input[type=text], select { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.check { display: flex; gap: 10px; align-items: flex-start; }
+.check input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); }
+.btn { height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn:disabled { opacity: .5; cursor: default; }
+.actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+.cmdline { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 14px; overflow-x: auto; white-space: pre; color: var(--muted); }
+details.doc { margin: 0 0 16px; }
+details.doc summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+details.doc pre { white-space: pre-wrap; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; color: var(--ink); }
+.console { margin-top: 18px; background: var(--console); color: var(--console-ink); border-radius: var(--radius); overflow: hidden; display: none; }
+.console.show { display: block; }
+.console .bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 12.5px; }
+.console .bar .st { font-weight: 700; }
+.console pre { margin: 0; padding: 12px 14px; max-height: 420px; overflow: auto; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; unicode-bidi: plaintext; }
+.ok { color: #4ade80; } .bad { color: #ff8a80; } .run { color: #fbbf24; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; place-items: center; padding: 16px; z-index: 10; }
+.modal.show { display: grid; }
+.picker { width: min(640px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
+.picker .path { font: 12.5px ui-monospace, Menlo, monospace; color: var(--muted); word-break: break-all; margin: 6px 0 10px; }
+.picker ul { list-style: none; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 8px; flex: 1; min-height: 200px; }
+.picker li { padding: 7px 10px; cursor: pointer; display: flex; gap: 8px; border-top: 1px solid var(--line); }
+.picker li:first-child { border-top: 0; }
+.picker li:hover, .picker li.sel { background: var(--accent-soft); }
+.picker .foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.empty { color: var(--muted); padding: 10px; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; height: auto; min-height: 100vh; }
+  header { flex-wrap: wrap; padding: 10px 16px; height: auto; gap: 10px; }
+  .spacer { display: none; }
+  .serial { order: 3; width: 100%; }
+  .serial input { width: auto; flex: 1; min-width: 0; }
+  .brand { flex: 1; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .row { flex-wrap: wrap; }
+  nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 42vh; }
+  main { padding: 18px 16px 40px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo" aria-hidden="true">⇄</div>wakit <span class="ver" id="ver"></span></div>
+    <div class="spacer"></div>
+    <label class="serial" title="adb device to use when more than one is connected (like adb -s)">Android device
+      <input type="text" id="serial" placeholder="auto (or 192.168.1.20:5555)"></label>
+    <button class="iconbtn" id="theme" title="Switch light / dark">◐</button>
+  </header>
+  <nav id="nav" aria-label="Commands"></nav>
+  <main><div class="wrap" id="view"></div></main>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="pk-title">
+  <div class="card picker">
+    <h2 id="pk-title">Choose a file or folder</h2>
+    <div class="path" id="pk-path"></div>
+    <ul id="pk-list"></ul>
+    <div class="foot">
+      <button class="btn" id="pk-up">Up</button>
+      <span class="spacer"></span>
+      <button class="btn" id="pk-cancel">Cancel</button>
+      <button class="btn primary" id="pk-ok">Use this</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN = location.hash.slice(1);
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) el.append(kid.nodeType ? kid : String(kid));
+  return el;
+};
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("wakit:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("wakit:" + k, JSON.stringify(v)); } catch {} },
+};
+async function api(path, body) {
+  const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "X-Wakit-Token": TOKEN, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+// guides: the workflows wakit was built for; each step opens a command form
+const GUIDES = [
+  { title: "Add an exported chat to Android", tag: "Android, rooted",
+    intro: "Turn a WhatsApp “Export chat” (.zip or _chat.txt, with media) into real history on your Android phone.",
+    steps: [["device", "info", "Check the phone is connected and rooted"],
+            ["device", "pull", "Copy WhatsApp's databases off the phone"],
+            ["import", null, "Dry run, check the counts, then Apply (pass “me” for exports made on the other person's phone)"],
+            ["device", "install", "Put the database back and start WhatsApp"]] },
+  { title: "iPhone → Android", tag: "rooted Android",
+    intro: "Bring the chats of an iPhone (from an unencrypted backup) onto an Android phone, merged with what is already there.",
+    steps: [["ios-backup", "backup", "Make an unencrypted backup of the iPhone (or use one from Finder / 3uTools)"],
+            ["device", "pull", "Copy the Android phone's databases"],
+            ["from-ios", null, "Dry run, then Apply with Push to send the media"],
+            ["stickers-from-ios", null, "Optional: your favourite stickers too"],
+            ["device", "install", "Put the database back and start WhatsApp"]] },
+  { title: "Android → iPhone", tag: "free, no Move to iOS",
+    intro: "Merge an Android phone's WhatsApp into an iPhone backup, then restore that backup to the iPhone.",
+    warn: "A restore replaces everything on the iPhone with the backup. Work on a fresh full backup and keep a copy of it. Never restore a backup cut down to WhatsApp only.",
+    steps: [["device", "pull", "Copy the Android databases"],
+            ["device", "pull-media", "Copy the Android media (photos, voice notes...)"],
+            ["ios-backup", "backup", "Make a fresh full, unencrypted iPhone backup - then copy it"],
+            ["to-ios", null, "Dry run, then Apply into the copy"],
+            ["ios-backup", "restore", "Restore the edited backup (Find My off, iPhone unlocked)"]] },
+  { title: "No root: edit the encrypted backup", tag: "experimental",
+    intro: "Use WhatsApp's own local backup (msgstore.db.crypt15 + your 64-digit key) instead of root access.",
+    warn: "Keep the original .crypt15. Restoring an edited backup means reinstalling WhatsApp and tapping Restore.",
+    steps: [["crypt", "info", "Check the backup file you copied off the phone"],
+            ["crypt", "decrypt", "Decrypt it with your 64-digit key"],
+            ["import", null, "Add chats (or use from-ios / merge) on the decrypted msgstore.db"],
+            ["crypt", "encrypt", "Seal it again, using the original file as the template"]] },
+  { title: "Merge two Android databases", tag: "Android",
+    intro: "Copy the history of an old msgstore.db (old phone, mod, adb backup) into the current one, without duplicates.",
+    steps: [["device", "pull", "Copy the current databases"],
+            ["merge", null, "Dry run, then Apply (Fuzzy skips messages that came in through exports)"],
+            ["stickers", null, "Optional: favourite stickers from the old stickers.db"],
+            ["device", "install", "Put the database back"]] },
+];
+const DANGER = { "ios-backup/restore": "This replaces EVERYTHING on the iPhone with the backup's contents.", "device/install": "This replaces WhatsApp's database on the phone (the old one is overwritten)." };
+
+let SCHEMA = null, current = null, poll = null;
+
+function navLink(label, small, onClick, key) {
+  const a = h("a", { "data-key": key, onclick: onClick, href: "#" + TOKEN }, h("b", {}, label), small ? h("small", {}, small) : null);
+  a.addEventListener("click", e => e.preventDefault());
+  return a;
+}
+function buildNav() {
+  const nav = $("#nav"); nav.innerHTML = "";
+  nav.append(h("h4", {}, "Start here"), navLink("Guides", "Step-by-step workflows", () => showGuides(), "guides"));
+  for (const section of ["Android", "iPhone", "Devices"]) {
+    const cmds = SCHEMA.commands.filter(c => c.section === section);
+    if (!cmds.length) continue;
+    nav.append(h("h4", {}, section));
+    for (const c of cmds) nav.append(navLink(c.name, c.summary, () => showCommand(c.name), c.name));
+  }
+}
+function mark(key) { document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.dataset.key === key)); }
+
+function showGuides() {
+  current = null; mark("guides");
+  const v = $("#view"); v.innerHTML = "";
+  v.append(h("h1", {}, "Move your WhatsApp history"),
+    h("p", { class: "lead" }, "Pick what you want to do. Each step opens the matching tool with its options. Every tool is a dry run until you press Apply, and makes a backup before it writes."));
+  v.append(h("div", { class: "note info" }, "Your chats never leave this computer: this page only talks to the wakit program running here."));
+  const grid = h("div", { class: "grid" });
+  for (const g of GUIDES) {
+    grid.append(h("div", { class: "card guide" },
+      h("h2", {}, g.title), h("div", { class: "help", style: "color:var(--muted);font-size:12px;margin:-6px 0 8px" }, g.tag),
+      h("p", { style: "margin:0 0 6px" }, g.intro),
+      g.warn ? h("div", { class: "note warn" }, g.warn) : null,
+      h("ol", {}, g.steps.map(([cmd, sub, text]) => h("li", {}, h("div", {},
+        h("a", { onclick: () => showCommand(cmd, sub) }, sub ? `${cmd} ${sub}` : cmd), " ", h("span", {}, "— " + text)))))));
+  }
+  v.append(grid);
+}
+
+function fieldEl(cmd, f, values) {
+  const id = `f-${cmd}-${f.dest}`;
+  const val = values[f.dest] ?? f.default ?? "";
+  if (f.kind === "bool") {
+    return h("div", { class: "field check" },
+      h("input", { type: "checkbox", id, "data-dest": f.dest, checked: !!values[f.dest] }),
+      h("div", {}, h("label", { for: id, style: "margin:0" }, f.flag.replace(/^--/, "").replace(/-/g, " "), h("code", {}, f.flag)), h("div", { class: "help" }, f.help)));
+  }
+  let input;
+  if (f.kind === "choice") {
+    input = h("select", { id, "data-dest": f.dest }, ["", ...f.choices].map(c => h("option", { value: c, selected: String(val) === String(c) }, c || "(default)")));
+  } else {
+    input = h("input", { type: "text", id, "data-dest": f.dest, value: val, spellcheck: "false", autocomplete: "off", placeholder: f.kind === "path" ? "~/path/to/…" : "" });
+  }
+  const row = h("div", { class: "row" }, input, f.kind === "path" ? h("button", { class: "btn", type: "button", onclick: () => pick(input) }, "Browse…") : null);
+  return h("div", { class: "field" },
+    h("label", { for: id }, f.flag.replace(/^--/, "").replace(/-/g, " "), f.required ? h("span", { class: "req", title: "required" }, "*") : null, h("code", {}, f.flag)),
+    row, f.help ? h("div", { class: "help" }, f.help) : null);
+}
+
+function showCommand(name, sub) {
+  const c = SCHEMA.commands.find(x => x.name === name);
+  if (!c) return;
+  if (c.subcommands && !sub) sub = store.get(`sub:${name}`, c.subcommands[0].name);
+  current = { c, sub }; mark(name);
+  if (sub) store.set(`sub:${name}`, sub);
+  const v = $("#view"); v.innerHTML = "";
+  const values = store.get(`vals:${name}`, {});
+  v.append(h("h1", {}, `wakit ${name}`), h("p", { class: "lead" }, c.summary));
+  v.append(h("details", { class: "doc" }, h("summary", {}, "How it works"), h("pre", {}, c.doc)));
+  const card = h("div", { class: "card" });
+  if (c.subcommands) {
+    card.append(h("div", { class: "tabs", role: "tablist" }, c.subcommands.map(s =>
+      h("button", { class: "tab" + (s.name === sub ? " active" : ""), role: "tab", "aria-selected": s.name === sub, onclick: () => showCommand(name, s.name), title: s.summary }, s.name))));
+    const s = c.subcommands.find(x => x.name === sub);
+    if (s) card.append(h("p", { style: "margin:-6px 0 14px;color:var(--muted)" }, s.summary));
+  }
+  const fs = [...c.fields, ...((c.subcommands || []).find(s => s.name === sub)?.fields || [])];
+  const hasApply = fs.some(f => f.dest === "apply");
+  const form = h("div", { class: "fields" }, fs.filter(f => f.dest !== "apply" && f.dest !== "yes").map(f => fieldEl(name, f, values)));
+  card.append(form);
+  const danger = DANGER[`${name}/${sub}`];
+  if (danger) card.append(h("div", { class: "note danger" }, danger));
+  const preview = h("div", { class: "cmdline", "aria-label": "command line" });
+  const runBtns = hasApply
+    ? [h("button", { class: "btn", onclick: () => run(false) }, "Dry run"), h("button", { class: "btn primary", onclick: () => run(true) }, "Apply")]
+    : [h("button", { class: "btn " + (danger ? "danger" : "primary"), onclick: () => run(true) }, danger ? "Run…" : "Run")];
+  card.append(h("div", { class: "actions" }, runBtns), preview);
+  v.append(card);
+  const con = h("div", { class: "console", id: "console" },
+    h("div", { class: "bar" }, h("span", { class: "st", id: "st" }), h("span", { class: "spacer", style: "flex:1" }),
+      h("button", { class: "iconbtn", id: "stop", style: "color:inherit;border-color:rgba(255,255,255,.2)" }, "Stop")),
+    h("pre", { id: "out" }));
+  v.append(con);
+
+  const collect = (apply) => {
+    const args = {};
+    form.querySelectorAll("[data-dest]").forEach(el => { args[el.dataset.dest] = el.type === "checkbox" ? el.checked : el.value.trim(); });
+    store.set(`vals:${name}`, args);
+    if (apply && hasApply) args.apply = true;
+    if (apply && fs.some(f => f.dest === "yes")) args.yes = true;
+    return { cmd: name, sub, args, serial: $("#serial").value.trim() };
+  };
+  const refresh = async () => {
+    try { const r = await api("/api/preview", collect(false)); preview.textContent = "wakit " + r.argv.map(q).join(" "); }
+    catch (e) { preview.textContent = "— " + e.message; }
+  };
+  form.addEventListener("input", refresh); form.addEventListener("change", refresh); refresh();
+
+  async function run(apply) {
+    const req = collect(apply);
+    if (danger && !confirm(danger + "\n\nContinue?")) return;
+    if (apply && hasApply && !confirm("Write the changes? (a backup is made first)")) return;
+    const out = $("#out"), st = $("#st");
+    con.classList.add("show"); out.textContent = ""; st.className = "st run"; st.textContent = "running…";
+    let job;
+    try { job = await api("/api/run", req); } catch (e) { st.className = "st bad"; st.textContent = e.message; return; }
+    out.textContent = "$ wakit " + job.argv.map(q).join(" ") + "\n";
+    $("#stop").onclick = () => api("/api/stop", { id: job.id });
+    let since = 0; clearInterval(poll);
+    poll = setInterval(async () => {
+      const r = await api(`/api/job?id=${job.id}&since=${since}`).catch(() => null);
+      if (!r) return;
+      since = r.next;
+      if (r.lines.length) { const atEnd = out.scrollTop + out.clientHeight >= out.scrollHeight - 8; out.textContent += r.lines.join("\n") + "\n"; if (atEnd) out.scrollTop = out.scrollHeight; }
+      if (r.code !== null) { clearInterval(poll); st.className = "st " + (r.code === 0 ? "ok" : "bad"); st.textContent = r.code === 0 ? "finished" : `failed (exit ${r.code})`; }
+    }, 400);
+  }
+}
+const q = s => /^[\w@%+=:,./~-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`;
+
+// file / folder picker over the local server
+let pickTarget = null, pickPath = null, pickSel = null;
+async function pick(input) {
+  pickTarget = input; pickSel = null;
+  await openDir(input.value.trim() || store.get("lastdir", SCHEMA.home));
+  $("#modal").classList.add("show"); $("#pk-ok").focus();
+}
+async function openDir(path) {
+  const r = await api("/api/ls?path=" + encodeURIComponent(path));
+  pickPath = r.path; pickSel = null; store.set("lastdir", r.path);
+  $("#pk-path").textContent = r.path; $("#pk-up").onclick = () => openDir(r.parent);
+  const ul = $("#pk-list"); ul.innerHTML = "";
+  if (r.error) ul.append(h("li", { class: "empty" }, r.error));
+  if (!r.items.length && !r.error) ul.append(h("li", { class: "empty" }, "empty folder"));
+  for (const it of r.items) {
+    const li = h("li", { tabindex: "0" }, it.dir ? "📁" : "📄", it.name);
+    li.onclick = () => { ul.querySelectorAll("li").forEach(x => x.classList.remove("sel")); li.classList.add("sel"); pickSel = r.path.replace(/\/$/, "") + "/" + it.name; };
+    li.ondblclick = () => it.dir ? openDir(pickSel) : choose(pickSel);
+    li.onkeydown = e => { if (e.key === "Enter") li.ondblclick(); };
+    ul.append(li);
+  }
+}
+function choose(path) { pickTarget.value = path; pickTarget.dispatchEvent(new Event("input", { bubbles: true })); $("#modal").classList.remove("show"); pickTarget.focus(); }
+$("#pk-ok").onclick = () => choose(pickSel || pickPath);
+$("#pk-cancel").onclick = () => $("#modal").classList.remove("show");
+$("#modal").addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").classList.remove("show"); });
+
+// theme
+const applyTheme = t => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; };
+applyTheme(store.get("theme", null));
+$("#theme").onclick = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches; const cur = document.documentElement.dataset.theme || (dark ? "dark" : "light"); const next = cur === "dark" ? "light" : "dark"; applyTheme(next); store.set("theme", next); };
+$("#serial").value = store.get("serial", ""); $("#serial").oninput = e => store.set("serial", e.target.value.trim());
+
+(async () => {
+  try { SCHEMA = await api("/api/schema"); }
+  catch (e) { $("#view").append(h("div", { class: "note danger" }, "Can't reach wakit: " + e.message + ". Open the link printed by `wakit gui`.")); return; }
+  $("#ver").textContent = "v" + SCHEMA.version;
+  buildNav();
+  const [cmd, sub] = (new URLSearchParams(location.search).get("view") || "").split("/");
+  if (cmd) showCommand(cmd, sub); else showGuides();
+})();
+</script>
+</body>
+</html>

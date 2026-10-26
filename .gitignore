@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.DS_Store
+.vercel/
+# never commit chat data
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.crypt*
+*.bak-*
+*-media/
+Media/

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wakit"
+version = "0.1.0"
+description = "Move WhatsApp chat history between chat exports, Android and iPhone - CLI and local web GUI"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Mena Maged" }]
+requires-python = ">=3.9"
+dependencies = []
+keywords = ["whatsapp", "android", "iphone", "ios", "backup", "chat", "migration", "msgstore", "export"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Environment :: Console",
+  "Environment :: Web Environment",
+  "Topic :: Utilities",
+]
+
+[project.optional-dependencies]
+crypt = ["cryptography>=3.4"]  # only for `wakit crypt` (.crypt14/.crypt15 backups)
+
+[project.urls]
+Homepage = "https://wakit-site.vercel.app"
+Source = "https://github.com/menaxmaged/wakit"
+Issues = "https://github.com/menaxmaged/wakit/issues"
+
+[project.scripts]
+wakit = "wakit.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = ["wakit", "wakit.web"]  # wakit.web: the GUI page
+
+[tool.setuptools.package-data]
+"wakit.web" = ["*.html"]
