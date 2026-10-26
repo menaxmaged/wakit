@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-10-26)
 - Standalone apps for macOS, Windows and Linux, attached to each release. There's no Python to install; double-click to open the GUI.
 - `src/` layout. Issue templates, contributing and security notes.
 
