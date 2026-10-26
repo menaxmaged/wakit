@@ -1,0 +1,16 @@
+name: Feature request
+description: Something wakit should be able to do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What do you want to move or fix?
+      description: For example "WhatsApp Business chats", "an export in another language", "iPhone → iPhone"
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Your setup
+      description: Phones, WhatsApp versions, rooted or not. Please don't share any chat data.

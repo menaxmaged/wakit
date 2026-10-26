@@ -1,0 +1,56 @@
+name: apps
+# Standalone wakit apps (PyInstaller, no Python needed): built and smoke-tested on every push to main;
+# publish.yml calls this with a tag to attach them to that release.
+on:
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, file: wakit, asset: wakit-linux-x86_64 }
+          - { os: windows-latest, file: wakit.exe, asset: wakit-windows-x86_64.exe }
+          - { os: macos-latest, file: wakit, asset: wakit-macos-arm64 }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install pyinstaller cryptography
+      - run: pyinstaller packaging/wakit.spec --noconfirm
+      - name: smoke test
+        run: |
+          ./dist/${{ matrix.file }} --version
+          ./dist/${{ matrix.file }} crypt -h > /dev/null
+          ./dist/${{ matrix.file }} ios-backup -h > /dev/null
+          ./dist/${{ matrix.file }} gui -h > /dev/null
+      - run: mkdir out && cp dist/${{ matrix.file }} out/${{ matrix.asset }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: out/${{ matrix.asset }}
+  attach:
+    if: ${{ inputs.tag != '' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" out/* --clobber --repo "$GITHUB_REPOSITORY"

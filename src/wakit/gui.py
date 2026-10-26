@@ -94,7 +94,9 @@ def child_env():
 
 def run_job(argv):
     jid = secrets.token_hex(6)
-    proc = subprocess.Popen([sys.executable, "-u", "-m", "wakit", *argv], stdout=subprocess.PIPE,
+    # the standalone app (PyInstaller) is itself the wakit command; otherwise run this Python's wakit
+    cmd = [sys.executable, *argv] if getattr(sys, "frozen", False) else [sys.executable, "-u", "-m", "wakit", *argv]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, text=True, bufsize=1,
                             cwd=os.path.expanduser("~"), env=child_env())
     job = {"argv": argv, "lines": [], "code": None, "proc": proc}

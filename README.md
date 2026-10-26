@@ -1,6 +1,13 @@
 # wakit
 
+[![PyPI](https://img.shields.io/pypi/v/wakit?color=128c5e)](https://pypi.org/project/wakit/)
+[![tests](https://github.com/menaxmaged/wakit/actions/workflows/test.yml/badge.svg)](https://github.com/menaxmaged/wakit/actions/workflows/test.yml)
+[![Python](https://img.shields.io/pypi/pyversions/wakit)](https://pypi.org/project/wakit/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/menaxmaged/wakit/blob/main/LICENSE)
+
 **Move your WhatsApp chat history between chat exports, Android and iPhone. Free, local, open source.**
+
+![wakit turning a chat export into history: dry run, apply, and a second run that finds nothing new](https://raw.githubusercontent.com/menaxmaged/wakit/main/docs/assets/demo.gif)
 
 wakit is a command-line tool with a local web GUI. It can:
 
@@ -19,7 +26,24 @@ Everything runs on your own computer. Nothing is uploaded anywhere.
 
 ---
 
-## Install
+## Download
+
+You don't need Python. Download the app for your computer from the [latest release](https://github.com/menaxmaged/wakit/releases/latest), then double-click it to open the GUI, or run it in a terminal with a command (`wakit import …`).
+
+| System | File |
+|---|---|
+| macOS (Apple silicon) | [`wakit-macos-arm64`](https://github.com/menaxmaged/wakit/releases/latest/download/wakit-macos-arm64) |
+| Windows | [`wakit-windows-x86_64.exe`](https://github.com/menaxmaged/wakit/releases/latest/download/wakit-windows-x86_64.exe) |
+| Linux (x86_64) | [`wakit-linux-x86_64`](https://github.com/menaxmaged/wakit/releases/latest/download/wakit-linux-x86_64) |
+
+The apps aren't signed, so the first launch needs one extra step:
+- **macOS:** run `chmod +x wakit-macos-arm64 && xattr -d com.apple.quarantine wakit-macos-arm64` once, or right-click it and choose **Open**.
+- **Windows:** choose **More info → Run anyway**.
+- **Linux:** run `chmod +x wakit-linux-x86_64`.
+
+Intel Macs and other systems: install with pip as shown below.
+
+## Install with pip
 
 Needs Python 3.9+. There are no Python dependencies.
 
@@ -51,6 +75,8 @@ This opens a page served by your computer only (`127.0.0.1`, with a one-time acc
 - **Guides**: the workflows below, step by step. Each step opens the matching tool.
 - **A form for every command**, with file pickers, so you never type a path.
 - **Dry run / Apply** buttons and a live log of each run.
+
+![The wakit GUI: step-by-step guides for each workflow](https://raw.githubusercontent.com/menaxmaged/wakit/main/docs/assets/gui.jpg)
 
 ## Workflows
 
@@ -169,7 +195,9 @@ python -m unittest discover -s tests -v
 wakit gui
 ```
 
-The code is in `src/wakit/`: one module per command (`cli.py` dispatches to them), and `web/index.html` is the GUI page.
+The code is in `src/wakit/`: one module per command (`cli.py` dispatches to them), and `web/index.html` is the GUI page. The standalone apps are built with PyInstaller from `packaging/wakit.spec` (`pip install pyinstaller && pyinstaller packaging/wakit.spec`). See [CONTRIBUTING.md](https://github.com/menaxmaged/wakit/blob/main/CONTRIBUTING.md).
+
+Releases: bump `version` in `pyproject.toml`, add a line to `CHANGELOG.md`, then `git tag -a vX.Y.Z -m "wakit X.Y.Z" && git push origin vX.Y.Z`. GitHub Actions tests it, publishes it to PyPI, and attaches the apps to the release.
 
 The tests use synthetic data only. Never commit real databases or exports: `.gitignore` blocks `*.db`, `*.sqlite` and media folders.
 
