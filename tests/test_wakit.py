@@ -259,6 +259,14 @@ class Plumbing(unittest.TestCase):
         for name in cli.COMMANDS:
             self.assertIn(name, buf.getvalue())
 
+    def test_app_bundles_every_command(self):
+        # cli.py imports commands by name, so the PyInstaller spec must list each module
+        import re
+        spec = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "packaging",
+                                 "wakit.spec")).read()
+        listed = set(re.findall(r'"wakit\.(\w+)"', spec))
+        self.assertEqual({m for m, _, _ in cli.COMMANDS.values()} - listed, set())
+
     def test_closed_pipe_is_quiet(self):
         import subprocess
         src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")

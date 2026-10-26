@@ -11,7 +11,7 @@ a = Analysis(
     datas=[(os.path.join(src, "wakit", "web", "index.html"), "wakit/web")],
     # cli.py imports the commands by name at run time, so list them for PyInstaller
     hiddenimports=[
-        "wakit.crypt", "wakit.db_merge", "wakit.device", "wakit.export_import", "wakit.from_ios", "wakit.gui",
+        "wakit.crypt", "wakit.db_merge", "wakit.doctor", "wakit.device", "wakit.export_import", "wakit.from_ios", "wakit.gui",
         "wakit.ios_backup", "wakit.ios_stickers", "wakit.sticker_merge", "wakit.to_ios"],
     excludes=["tkinter", "unittest", "pydoc_data"],
 )
