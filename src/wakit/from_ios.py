@@ -20,7 +20,7 @@ examples:
 import argparse, base64, hashlib, mimetypes, os, re, shutil, sqlite3, sys, tempfile
 from datetime import datetime
 
-from . import export_import as w, ios_backup
+from . import doctor, export_import as w, ios_backup
 
 APPLE_EPOCH = 978307200  # iOS stores dates as seconds since 2001-01-01
 # iOS ZMESSAGETYPE -> Android message_type ("location" becomes a text with a maps link)
@@ -48,6 +48,7 @@ def read_backup(root):
     if not os.path.exists(db):
         w.die(f"no ChatStorage.sqlite in {root}")
     con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
+    doctor.require(con, "ios", "the iPhone's ChatStorage.sqlite")
     chats = {pk: {"jid": jid, "name": name, "group": stype == 1, "hidden": bool(hidden), "rows": []}
              for pk, jid, name, stype, hidden in con.execute(
                  "SELECT Z_PK, ZCONTACTJID, ZPARTNERNAME, ZSESSIONTYPE, coalesce(ZHIDDEN, 0) FROM ZWACHATSESSION "
@@ -139,6 +140,7 @@ def create_direct_chat(cur, jid_id, first_ts):
 
 
 def insert(cur, chat_id, rows, media_out, folders, tmp):
+    fts = w.has_fts(cur)
     first = cur.execute("SELECT coalesce(max(sort_id), 0) + 1 FROM message").fetchone()[0]
     chat_jid = cur.execute("SELECT jid_row_id FROM chat WHERE _id=?", (chat_id,)).fetchone()[0]
     for i, r in enumerate(rows):
@@ -170,7 +172,7 @@ def insert(cur, chat_id, rows, media_out, folders, tmp):
                 dst = os.path.join(media_out, rel)
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copy2(md["path"], dst)
-        if r["text"]:
+        if r["text"] and fts:
             who = "1" if r["from_me"] else (w.b36(sender + 10) if sender else "0")
             cur.execute("INSERT INTO message_ftsv2(docid, content, fts_jid, fts_namespace) VALUES(?,?,?,'')",
                         (rid, r["text"], f"{who} {w.b36(chat_jid + 10)}"))
@@ -203,6 +205,7 @@ def main(argv=None):
         print(f"phone:  media root {root}")
 
     con = sqlite3.connect(a.db)
+    doctor.require(con, "android", a.db)
     bak = w.backup(a.db) if a.apply else None
     cur = con.cursor()
     cur.execute("BEGIN")

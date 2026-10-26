@@ -17,7 +17,7 @@ examples:
   wakit to-ios --db msgstore.db --backup iphone-backup-copy/ --media tablet-media/
   wakit to-ios --db msgstore.db --backup iphone-backup-copy/ --media tablet-media/ --apply
 """
-from . import ios_backup
+from . import doctor, ios_backup
 import argparse, base64, hashlib, os, plistlib, re, shutil, sqlite3, subprocess, sys, tempfile, time, uuid
 from datetime import datetime
 
@@ -78,6 +78,7 @@ def quote_blob(q):
 # --- the Android side ---
 def read_android(db, wa_db):
     con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
+    doctor.require(con, "android", db)
     raw = dict(con.execute("SELECT _id, raw_string FROM jid"))
     lid_of, pn_of = {}, {}
     for lid, pn in con.execute("SELECT lid_row_id, jid_row_id FROM jid_map"):
@@ -461,6 +462,7 @@ def main(argv=None):
         work = os.path.join(tmp, "ChatStorage.sqlite")
         shutil.copyfile(backup.chat_path, work)
         ios = sqlite3.connect(work)
+        doctor.require(ios, "ios", "the backup's ChatStorage.sqlite")
         ios.execute("BEGIN")
         me = my_jid(ios)
         if not me:

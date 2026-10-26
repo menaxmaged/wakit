@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- `wakit doctor`: identifies a database, iPhone backup, `.crypt14`/`.crypt15` file or chat export, shows what's in it, and checks its layout. Every command that writes now runs the same check first and refuses an unknown layout, without changing anything.
+- Databases decrypted from `.crypt14`/`.crypt15` backups have no search index (`message_ftsv2`). `import`, `from-ios` and `merge` now skip it instead of failing, and WhatsApp rebuilds it after the restore. This fixes the no-root workflow.
+- Output piped into `head` and the like, and Ctrl+C, now end quietly instead of printing a traceback.
+
 ## 0.2.0 (2026-10-26)
 - Standalone apps for macOS, Windows and Linux, attached to each release. There's no Python to install; double-click to open the GUI.
 - `src/` layout. Issue templates, contributing and security notes.

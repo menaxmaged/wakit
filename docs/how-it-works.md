@@ -106,6 +106,7 @@ A local backup file is laid out like this:
 - **Keys:**
   - **crypt14:** the AES key is the last 32 bytes of the 158-byte Java-serialized `files/key`.
   - **crypt15:** the 64-digit key of an end-to-end encrypted backup is a 32-byte root key. The AES key is `HKDF-SHA256(root, salt = 32 zero bytes, info = "backup encryption")`, the first 32 bytes.
+- **No search index:** the database inside a backup has no `message_ftsv2` table. WhatsApp rebuilds it after a restore, so wakit leaves it out when writing into a decrypted backup.
 - **Re-encrypting:** wakit keeps the original header and swaps in a fresh random IV, because an IV must never be reused with the same key. It then encrypts and adds the tag, plus the MD5 if the original had one.
 
 The layout was first worked out against the open-source

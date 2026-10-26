@@ -17,6 +17,8 @@ examples:
   wakit merge --old old/msgstore.db --new new/msgstore.db
   wakit merge --old old/msgstore.db --new new/msgstore.db --apply
 """
+from . import doctor
+from .export_import import has_fts
 import argparse, os, shutil, sqlite3, sys, tempfile
 from datetime import datetime
 
@@ -346,7 +348,8 @@ def merge(cur, report, fuzzy=False, skip_types=()):
     chat_jid = dict(cur.execute("SELECT _id, jid_row_id FROM chat"))
     by_id = {nid: r for nid, r in inserted}
     fts = 0
-    for docid, content, ns in cur.execute("SELECT docid, content, fts_namespace FROM o.message_ftsv2").fetchall():
+    both = has_fts(cur) and has_fts(cur, "o")  # backups have no search index; the app rebuilds it
+    for docid, content, ns in cur.execute("SELECT docid, content, fts_namespace FROM o.message_ftsv2").fetchall() if both else []:
         nid = maps["M"].get(docid)
         if nid not in by_id:
             continue
@@ -416,6 +419,10 @@ def main(argv=None):
             if os.path.exists(a.old + suffix):
                 shutil.copy2(a.old + suffix, old + suffix)
 
+        for path, label in ((old, a.old), (a.new, a.new)):
+            check = sqlite3.connect(path)
+            doctor.require(check, "android", label)
+            check.close()
         bak = backup(a.new) if a.apply else None
         con = sqlite3.connect(a.new, isolation_level=None)
         con.execute("ATTACH ? AS o", (old,))

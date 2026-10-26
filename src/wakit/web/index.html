@@ -214,9 +214,10 @@ function navLink(label, small, onClick, key) {
 function buildNav() {
   const nav = $("#nav"); nav.innerHTML = "";
   nav.append(h("h4", {}, "Start here"), navLink("Guides", "Step-by-step workflows", () => showGuides(), "guides"));
-  for (const section of ["Android", "iPhone", "Devices"]) {
+  for (const c of SCHEMA.commands.filter(c => c.section === "Start")) nav.append(navLink(c.name, c.summary, () => showCommand(c.name), c.name));
+  for (const section of ["Start", "Android", "iPhone", "Devices"]) {
     const cmds = SCHEMA.commands.filter(c => c.section === section);
-    if (!cmds.length) continue;
+    if (!cmds.length || section === "Start") continue;
     nav.append(h("h4", {}, section));
     for (const c of cmds) nav.append(navLink(c.name, c.summary, () => showCommand(c.name), c.name));
   }

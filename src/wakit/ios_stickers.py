@@ -9,7 +9,7 @@ Stickers already in the db are skipped. Dry run by default; pass --apply to writ
 example:
   wakit stickers-from-ios --db stickers.db --backup ios/ --files-out Stickers --apply
 """
-from . import ios_backup
+from . import doctor, ios_backup
 import argparse, base64, os, shutil, sqlite3, subprocess, sys, time
 
 FAVORITE = 1  # ZWACDSTICKER.ZFLAGS bit for a favorite
@@ -43,6 +43,7 @@ def main(argv=None):
                                  ZACCESSIBILITYTEXT, ZRELATIVEIMAGEPATH
                           FROM ZWACDSTICKER WHERE ZSTICKERPACK IS NULL ORDER BY ZSORT DESC, Z_PK DESC""").fetchall()
     con = sqlite3.connect(a.db)
+    doctor.require(con, "stickers", a.db)
     have = {h for (h,) in con.execute("SELECT plaintext_hash FROM starred_stickers UNION SELECT plaintext_hash FROM recent_stickers")}
     now, fav, rec, skipped = int(time.time() * 1000), 0, 0, 0
     os.makedirs(a.files_out, exist_ok=True)

@@ -13,6 +13,7 @@ examples:
   wakit import --db msgstore.db --export "WhatsApp Chat - Alex.zip" --contact 15551234567
   wakit import --db msgstore.db --export chat.zip --contact "Alex" --me "Sam" --apply
 """
+from . import doctor
 import argparse, base64, hashlib, mimetypes, os, re, secrets, shutil, sqlite3, subprocess, sys, tempfile, unicodedata, zipfile
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -539,7 +540,13 @@ def new_key():
     return "3A" + secrets.token_hex(9).upper()
 
 
+def has_fts(cur, schema="main"):
+    """the search index; backups (.crypt14/.crypt15) leave it out, and the app rebuilds it after a restore"""
+    return cur.execute(f"SELECT 1 FROM {schema}.sqlite_master WHERE name='message_ftsv2'").fetchone() is not None
+
+
 def insert_rows(cur, chat_id, rows, media_out, folders, tmp):
+    fts = has_fts(cur)
     # temporary sort ids after everything; renumber_sort_ids() puts them in time order afterwards
     first = cur.execute("SELECT coalesce(max(sort_id), 0) + 1 FROM message").fetchone()[0]
     chat_jid = cur.execute("SELECT jid_row_id FROM chat WHERE _id=?", (chat_id,)).fetchone()[0]
@@ -573,7 +580,7 @@ def insert_rows(cur, chat_id, rows, media_out, folders, tmp):
                 dst = os.path.join(media_out, rel)
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copy2(md["path"], dst)
-        if r["text"]:
+        if r["text"] and fts:
             # docid is the message _id; fts_jid is "<sender> <chat>" (1 = me, 0 = the other side of a 1:1 chat)
             cur.execute("INSERT INTO message_ftsv2(docid, content, fts_jid, fts_namespace) VALUES(?,?,?,'')",
                         (rid, r["text"], f"{r['from_me']} {b36(chat_jid + 10)}"))
@@ -645,6 +652,7 @@ def main(argv=None):
         rows.sort(key=lambda r: r["ts"])  # stable: keeps export order within a second
 
         con = sqlite3.connect(a.db)
+        doctor.require(con, "android", a.db)
         chat_id, number = find_chat(con, a.contact, wa_db)
         span = chat_id and con.execute("SELECT min(timestamp), max(timestamp), count(*) FROM message "
                                        "WHERE chat_row_id=? AND timestamp>0", (chat_id,)).fetchone()

@@ -10,6 +10,7 @@ example:
   wakit stickers --db stickers.db --from old/databases/stickers.db --from-files old/files/Stickers \\
                       --files-out Stickers --apply
 """
+from . import doctor
 import argparse, os, shutil, sqlite3, sys
 
 TABLES = ("starred_stickers", "recent_stickers")
@@ -35,6 +36,8 @@ def main(argv=None):
 
     con = sqlite3.connect(a.db)
     src = sqlite3.connect(f"file:{a.src}?mode=ro", uri=True)
+    doctor.require(con, "stickers", a.db)
+    doctor.require(src, "stickers", a.src)
     have = {h for t in TABLES for (h,) in con.execute(f"SELECT plaintext_hash FROM {t}")}
     recents = {h for (h,) in con.execute("SELECT plaintext_hash FROM recent_stickers")}
     os.makedirs(a.files_out, exist_ok=True)

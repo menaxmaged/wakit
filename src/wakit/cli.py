@@ -5,6 +5,7 @@ from . import __version__
 
 # command -> (module, one-line summary, section)
 COMMANDS = {
+    "doctor": ("doctor", "check a database, backup or export before changing it (run this first)", "Start"),
     "import": ("export_import", "add an \"Export chat\" .zip/.txt to an Android msgstore.db", "Android"),
     "merge": ("db_merge", "copy the history of one Android msgstore.db into another", "Android"),
     "crypt": ("crypt", "decrypt / re-encrypt .crypt14/.crypt15 backups (no root needed)", "Android"),
@@ -25,7 +26,7 @@ def module(cmd):
 def usage():
     out = [f"wakit {__version__} - move WhatsApp chat history between exports, Android and iPhone", "",
            "usage: wakit [--serial DEVICE] <command> [options]      (wakit <command> -h for details)", ""]
-    for section in ("Android", "iPhone", "Devices"):
+    for section in ("Start", "Android", "iPhone", "Devices"):
         out.append(f"{section}:")
         out += [f"  {c:<18} {s}" for c, (_, s, sec) in COMMANDS.items() if sec == section]
         out.append("")
@@ -35,6 +36,17 @@ def usage():
 
 
 def main(argv=None):
+    try:
+        run(argv)
+    except BrokenPipeError:  # output piped into `head` and the like, which stopped reading: not an error
+        import os
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())  # no second error when Python flushes
+        sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit("\ninterrupted")
+
+
+def run(argv):
     import os
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv[:1] == ["--serial"] and len(argv) > 1:  # which adb device, like adb -s

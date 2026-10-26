@@ -159,6 +159,7 @@ wakit crypt encrypt --in msgstore.db --like msgstore.db.crypt15 --key "<your 64-
 
 | Command | What it does |
 |---|---|
+| `doctor` | check any database, iPhone backup, `.crypt` file or export: what it is, what's in it, and whether wakit knows its layout. **Run it first.** |
 | `import` | "Export chat" .zip/.txt → Android `msgstore.db` |
 | `crypt info \| decrypt \| encrypt` | open and re-seal `.crypt14`/`.crypt15` backups (no root) |
 | `merge` | one Android `msgstore.db` → another (messages, media, replies, reactions, calls) |
@@ -181,6 +182,7 @@ Run `wakit <command> -h` for every option. Use `wakit --serial <device>` to pick
 - **Not carried over:**
   - Android → iPhone: reactions, polls and system notices.
   - iPhone → Android: polls, reactions and calls.
+- **A new WhatsApp version?** Every command that writes checks the database layout first and refuses to touch one it doesn't know, naming exactly what's missing. `wakit doctor --path <file>` shows the same check. Its output lists only table and column names, so it's safe to paste into an issue.
 - **Tested with** WhatsApp 2.26 on a rooted Android 7.1 tablet and on iOS 27. Other versions should work but haven't been tried. WhatsApp changes its database layout from time to time. If something looks off, open an issue with the dry-run output, but **never share your databases**.
 
 How it works inside (schemas, sort order, the protobuf blobs, the backup format): [docs/how-it-works.md](https://github.com/menaxmaged/wakit/blob/main/docs/how-it-works.md).

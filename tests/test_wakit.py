@@ -3,7 +3,7 @@ import base64, contextlib, io, os, plistlib, sqlite3, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from wakit import cli, crypt, export_import, gui, ios_backup, to_ios  # noqa: E402
+from wakit import cli, crypt, doctor, export_import, gui, ios_backup, to_ios  # noqa: E402
 
 try:
     import cryptography  # noqa: F401  (optional: only `wakit crypt` needs it)
@@ -210,6 +210,43 @@ class Crypt(unittest.TestCase):
             crypt.decrypt(out, crypt.load_key("ff" * 32, "crypt15"), crypt.parse(out))
 
 
+def layout_db(kind, drop=None, skip_tables=()):
+    """an empty database with exactly the tables/columns doctor expects (minus `drop` = (table, column))"""
+    con = sqlite3.connect(":memory:")
+    for table, cols in doctor.LAYOUTS[kind].items():
+        if table in skip_tables:
+            continue
+        keep = [c for c in cols if (table, c) != drop]
+        quoted = ", ".join('"%s"' % c for c in keep)
+        con.execute(f'CREATE TABLE "{table}" ({quoted})')
+    return con
+
+
+class Doctor(unittest.TestCase):
+    def test_known_layouts_pass(self):
+        for kind in doctor.LAYOUTS:
+            found, have = doctor.detect(layout_db(kind))
+            self.assertEqual(found, kind)
+            self.assertEqual(doctor.missing(have, kind), [])
+            doctor.require(layout_db(kind), kind)  # does not exit
+
+    def test_missing_column_is_refused(self):
+        con = layout_db("android", drop=("message", "view_mode"))
+        self.assertEqual(doctor.missing(doctor.detect(con)[1], "android"), [("message", ["view_mode"])])
+        with self.assertRaises(SystemExit) as e:
+            doctor.require(con, "android")
+        self.assertIn("view_mode", str(e.exception))
+
+    def test_backup_without_search_index_is_fine(self):
+        # .crypt14/.crypt15 backups leave out message_ftsv2; the app rebuilds it after a restore
+        con = layout_db("android", skip_tables=("message_ftsv2",))
+        self.assertEqual(doctor.missing(doctor.detect(con)[1], "android"), [])
+
+    def test_wrong_kind_is_refused(self):
+        with self.assertRaises(SystemExit):
+            doctor.require(layout_db("ios"), "android")
+
+
 class Plumbing(unittest.TestCase):
     def test_every_command_builds(self):
         for name in cli.COMMANDS:
@@ -221,6 +258,16 @@ class Plumbing(unittest.TestCase):
             cli.main([])
         for name in cli.COMMANDS:
             self.assertIn(name, buf.getvalue())
+
+    def test_closed_pipe_is_quiet(self):
+        import subprocess
+        src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
+        p = subprocess.Popen([sys.executable, "-m", "wakit"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             env={**os.environ, "PYTHONPATH": src})
+        p.stdout.close()  # like `wakit | head -0`
+        self.assertNotIn(b"Traceback", p.stderr.read())
+        p.stderr.close()
+        p.wait()
 
     def test_gui_schema_and_argv(self):
         s = gui.schema()

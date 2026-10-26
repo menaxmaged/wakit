@@ -15,7 +15,7 @@ from . import __version__
 from .cli import COMMANDS
 
 PATHS = {"db", "export", "backup", "media", "out", "wa_db", "media_out", "old", "new", "src", "from_files",
-         "files_out", "input", "like", "key"}
+         "files_out", "input", "like", "key", "path"}
 JOBS, LOCK = {}, threading.Lock()
 
 
