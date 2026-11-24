@@ -112,3 +112,23 @@ A local backup file is laid out like this:
 The layout was first worked out against the open-source
 [whatsapp-msgstore-web-viewer](https://github.com/trevordixon/whatsapp-msgstore-web-viewer), then checked on real
 crypt14 backups (decrypted byte for byte, and round-tripped). wakit's code is its own.
+
+## Android: `adb backup` files (`.ab`)
+
+`wakit adb-backup` reads and writes these. The file is a few text lines, then the data:
+
+```
+ANDROID BACKUP
+5                      format version
+1                      1 = the data is zlib-compressed
+none | AES-256         encryption
+[AES-256 only] user salt (hex), checksum salt (hex), PBKDF2 rounds, user IV (hex), encrypted master key blob (hex)
+<data>
+```
+
+- **Data:** a tar archive with entries `apps/<package>/_manifest` (first, and it must stay first), then `db/` (databases), `f/` (files, including WhatsApp's crypt14 `key`), `sp/` (shared preferences) and `r/` (everything else).
+- **Encryption:** the user key is PBKDF2-HMAC-SHA1(password as UTF-8, user salt, rounds, 32 bytes). It decrypts, with AES-256-CBC, a blob holding `[16][IV][32][master key][32][checksum]`, and the master key decrypts the data with AES-256-CBC.
+  - The checksum is PBKDF2 over the master key turned into a Java `char[]` of *signed* bytes, so bytes 0x80–0xFF become U+FF80–U+FFFF before UTF-8 encoding.
+  - Version 1 files use the low 8 bits of each character instead of UTF-8.
+- **Restores:** Android wipes the app's data and writes the archive back. It only does so when the installed app allows backups, its signature matches the manifest's, and its version is at least the backed-up one. `pack` therefore keeps every entry and the archive's order. It drops the `-wal`/`-shm`/`-journal` files of a replaced database, because a stale write-ahead log would be replayed over the edit.
+- **Why the old WhatsApp:** WhatsApp sets `allowBackup=false`, and since Android 12 `adb backup` also leaves out apps that target SDK 31+. `pm uninstall -k` keeps the data folder, and an old APK installed with `install -r -d` takes it over. Backup and restore then run without the app's own code, because there is no backup agent: Android starts the app in a restricted mode.

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- `wakit adb-backup` (experimental): the no-root route over `adb backup` / `adb restore`. `info` says whether adb backup can reach WhatsApp. `downgrade` saves the installed WhatsApp and puts an old one that allows backups over the kept data, and puts yours straight back if the phone refuses. `backup`, `extract`, `pack` and `restore` handle the `.ab` file, password-protected ones included. `upgrade` reinstalls your WhatsApp.
+- `doctor` reads `.ab` adb backups.
+- GUI redesign: guided workflows with a working folder that fills in every path, step ticks and resume, plain-language field names with extra options folded away, a connected-phone indicator, clearer run results, and confirmation dialogs. Backup keys and passwords are no longer saved in the browser.
+- `crypt decrypt` / `encrypt` create the output folder if it's missing.
+
 ## 0.3.0 (2026-10-27)
 - `wakit doctor`: identifies a database, iPhone backup, `.crypt14`/`.crypt15` file or chat export, shows what's in it, and checks its layout. Every command that writes now runs the same check first and refuses an unknown layout, without changing anything.
 - Databases decrypted from `.crypt14`/`.crypt15` backups have no search index (`message_ftsv2`). `import`, `from-ios` and `merge` now skip it instead of failing, and WhatsApp rebuilds it after the restore. This fixes the no-root workflow.
