@@ -204,6 +204,7 @@ def cmd_decrypt(a):
         print("note: the result is not an SQLite database (a settings/JSON backup?) - written as is")
     if os.path.exists(a.out) and not a.force:
         die(f"{a.out} exists - pass --force to overwrite")
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     open(a.out, "wb").write(db)
     print(f"decrypted {a.input} ({h['kind']}) -> {a.out} ({len(db) / 1e6:.1f} MB)")
 
@@ -221,6 +222,7 @@ def cmd_encrypt(a):
         die("self-check failed - nothing written")
     if os.path.exists(a.out) and not a.force:
         die(f"{a.out} exists - pass --force to overwrite")
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     open(a.out, "wb").write(out)
     print(f"encrypted {a.input} -> {a.out} ({h['kind']}, {len(out) / 1e6:.1f} MB), checked by decrypting it again")
     print("restore: copy it into WhatsApp/Databases on the phone as the newest backup, reinstall WhatsApp, Restore")

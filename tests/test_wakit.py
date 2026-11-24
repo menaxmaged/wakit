@@ -3,7 +3,7 @@ import base64, contextlib, io, os, plistlib, sqlite3, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
-from wakit import cli, crypt, doctor, export_import, gui, ios_backup, to_ios  # noqa: E402
+from wakit import adb_backup, cli, crypt, doctor, export_import, gui, ios_backup, to_ios  # noqa: E402
 
 try:
     import cryptography  # noqa: F401  (optional: only `wakit crypt` needs it)
@@ -247,6 +247,239 @@ class Doctor(unittest.TestCase):
             doctor.require(layout_db("ios"), "android")
 
 
+def wa_tar(db=b"SQLite format 3\x00" + b"\x00" * 100, extra=()):
+    """a tar laid out like `adb backup` of WhatsApp: _manifest first, then the app's folders"""
+    files = [("apps/com.whatsapp/_manifest", b"1\ncom.whatsapp\n231000\n"),
+             ("apps/com.whatsapp/db/msgstore.db", db), ("apps/com.whatsapp/db/msgstore.db-wal", b"stale wal"),
+             ("apps/com.whatsapp/f/key", b"k" * 158), ("apps/com.whatsapp/sp/prefs.xml", b"<map/>"), *extra]
+    items = []
+    for name, data in files:
+        info = adb_backup.tarfile.TarInfo(name)
+        info.mode, info.mtime = 0o600, 1700000000
+        items.append((info, data))
+    return adb_backup.build_tar(items)
+
+
+def real_db(path, rows=1):
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE IF NOT EXISTS message (_id INTEGER PRIMARY KEY, text_data TEXT)")
+    con.executemany("INSERT INTO message (text_data) VALUES (?)", [("hi",)] * rows)
+    con.commit()
+    con.close()
+    return open(path, "rb").read()
+
+
+FAKE_ADB = r"""#!%(python)s
+# a pretend phone for the adb-backup tests: state in $FAKE_ADB_STATE (json), every call logged
+import json, os, sys
+st_path = os.environ["FAKE_ADB_STATE"]
+st = json.load(open(st_path))
+args = sys.argv[1:]
+st["log"].append(args)
+out, code = "", 0
+def dumpsys():
+    app = st["installed"]
+    if not app:
+        return ""
+    flags = "HAS_CODE ALLOW_CLEAR_USER_DATA" + (" ALLOW_BACKUP" if app == "legacy" else "")
+    target = 17 if app == "legacy" else 34
+    code = 451 if app == "legacy" else 231000
+    return ("Packages:\n  Package [com.whatsapp] (abc):\n    versionCode=%%d minSdk=9 targetSdk=%%d\n"
+            "    versionName=%%s\n    flags=[ %%s ]\n" %% (code, target, "2.11.431" if app == "legacy" else "2.26.1", flags))
+if args[0] == "get-state":
+    out = "device"
+elif args[0] == "shell":
+    cmd = args[1]
+    if cmd.startswith("getprop ro.build.version.sdk"):
+        out = str(st["sdk"])
+    elif cmd.startswith("getprop"):
+        out = "Fake"
+    elif cmd.startswith("dumpsys package"):
+        out = dumpsys()
+    elif cmd.startswith("pm path"):
+        out = "package:/data/app/w/base.apk\npackage:/data/app/w/split_config.arm64_v8a.apk\n" if st["installed"] else ""
+    elif cmd.startswith("pm uninstall -k"):
+        st["installed"], out = None, "Success"
+elif args[0] == "pull":
+    open(args[2], "wb").write(b"APK" + args[1].encode())
+elif args[0] in ("install", "install-multiple"):
+    if args[0] == "install" and st["refuse_downgrade"]:
+        out, code = "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]", 1
+    else:
+        st["installed"], out = ("current" if args[0] == "install-multiple" else "legacy"), "Success"
+elif args[0] == "backup":
+    open(args[2], "wb").write(open(st["backup_from"], "rb").read())
+elif args[0] == "restore":
+    st["restored"] = open(args[1], "rb").read().hex()
+json.dump(st, open(st_path, "w"))
+print(out)
+sys.exit(code)
+"""
+
+
+class AdbBackupFile(unittest.TestCase):
+    def test_round_trip_plain_and_password(self):
+        tar = wa_tar()
+        for pw in (None, "pässword"):
+            if pw and not HAVE_CRYPTO:
+                continue
+            for compressed in (True, False):
+                head, back = adb_backup.read_ab(adb_backup.write_ab(tar, 5, compressed, pw), pw)
+                self.assertEqual(back, tar)
+                self.assertEqual((head["encrypted"], head["compressed"]), (bool(pw), compressed))
+
+    @unittest.skipUnless(HAVE_CRYPTO, "needs cryptography")
+    def test_wrong_or_missing_password(self):
+        out = adb_backup.write_ab(wa_tar(), 5, True, "right")
+        for pw in ("wrong", None):
+            with self.assertRaises(SystemExit):
+                adb_backup.read_ab(out, pw)
+
+    def test_keys_match_java(self):
+        # computed with the JDK's PBKDF2WithHmacSHA1, the way Android does it: the master key goes in as a char[]
+        # of signed bytes (0x80.. become U+FF80..), the password as its UTF-8 bytes
+        mk, salt = bytes(range(0x70, 0x90)), b"\xab" * 64
+        self.assertEqual(adb_backup._checksum(mk, salt, 10000, 5).hex(),
+                         "6f08cb32c7058efdc2bf1688f660747c23300d274816cede7f00823a4a85249b")
+        self.assertEqual(adb_backup.hashlib.pbkdf2_hmac("sha1", adb_backup._pw_bytes("pässwörd", 5), salt, 10000, 32).hex(),
+                         "5f2cf59d35b2539fe63b776fd0a65061b2d5ea60cd9ca4e1dfb9305d5a994733")
+
+    def test_repack_swaps_db_and_drops_stale_wal(self):
+        items = adb_backup.members(wa_tar())
+        new, dropped = adb_backup.repack(items, "com.whatsapp", {"msgstore.db": b"NEW"})
+        self.assertEqual(dropped, ["msgstore.db-wal"])
+        self.assertEqual([m.name for m, _ in new][0], "apps/com.whatsapp/_manifest")  # order kept
+        self.assertEqual(adb_backup.find(new, "com.whatsapp", "db/msgstore.db")[1], b"NEW")
+        self.assertEqual(adb_backup.find(new, "com.whatsapp", "f/key")[1], b"k" * 158)
+        with self.assertRaises(SystemExit):
+            adb_backup.repack(items, "com.whatsapp", {"wa.db": b"x"})  # not in the backup
+
+    def test_dumpsys_and_verdict(self):
+        text = ("Packages:\n  Package [com.whatsapp] (1):\n    versionCode=231 minSdk=21 targetSdk=34\n"
+                "    versionName=2.26.1\n    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]\n"
+                "  Package [com.other] (2):\n    flags=[ ALLOW_BACKUP ]\n")
+        info = adb_backup.parse_dumpsys(text, "com.whatsapp")
+        self.assertEqual((info["version"], info["code"], info["target"]), ("2.26.1", 231, 34))
+        self.assertNotIn("ALLOW_BACKUP", info["flags"])  # com.other's flags don't leak in
+        self.assertFalse(adb_backup.verdict(30, info)[0])
+        info["flags"].add("ALLOW_BACKUP")
+        self.assertFalse(adb_backup.verdict(31, info)[0])  # Android 12 leaves out apps targeting 31+
+        self.assertTrue(adb_backup.verdict(30, info)[0])
+        self.assertIsNone(adb_backup.parse_dumpsys(text, "com.whatsapp.w4b"))
+
+
+class AdbBackupPhone(unittest.TestCase):
+    """the whole no-root round trip against a pretend phone"""
+
+    def setUp(self):
+        import json
+        self.tmp = tempfile.mkdtemp()
+        bin_dir = os.path.join(self.tmp, "bin")
+        os.mkdir(bin_dir)
+        adb = os.path.join(bin_dir, "adb")
+        write(adb, FAKE_ADB % {"python": sys.executable})
+        os.chmod(adb, 0o755)
+        db = real_db(os.path.join(self.tmp, "orig.db"))
+        self.ab = os.path.join(self.tmp, "phone.ab")
+        open(self.ab, "wb").write(adb_backup.write_ab(wa_tar(db)))
+        self.state = os.path.join(self.tmp, "state.json")
+        json.dump({"log": [], "sdk": 30, "installed": "current", "refuse_downgrade": False, "backup_from": self.ab},
+                  open(self.state, "w"))
+        self.env = {k: os.environ.get(k) for k in ("PATH", "FAKE_ADB_STATE")}
+        os.environ["PATH"] = bin_dir + os.pathsep + os.environ["PATH"]
+        os.environ["FAKE_ADB_STATE"] = self.state
+
+    def tearDown(self):
+        import shutil
+        for k, v in self.env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        shutil.rmtree(self.tmp)
+
+    def st(self):
+        import json
+        return json.load(open(self.state))
+
+    def run_cmd(self, *argv):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            try:
+                adb_backup.main(list(argv))
+                code = 0
+            except SystemExit as e:
+                code, msg = e.code, e.code
+                if isinstance(msg, str):
+                    buf.write(msg)
+        return code, buf.getvalue()
+
+    def test_refused_downgrade_puts_whatsapp_back(self):
+        import json
+        s = self.st()
+        s["refuse_downgrade"] = True
+        json.dump(s, open(self.state, "w"))
+        apk = write(os.path.join(self.tmp, "old.apk"), "old")
+        code, out = self.run_cmd("downgrade", "--apk", apk, "--save-to", os.path.join(self.tmp, "apks"), "--yes")
+        self.assertNotEqual(code, 0)
+        self.assertIn("WhatsApp is back", out)
+        self.assertEqual(self.st()["installed"], "current")
+        self.assertEqual(self.st()["log"][-1][0], "install-multiple")  # base + split reinstalled together
+
+    def test_downgrade_needs_yes(self):
+        apk = write(os.path.join(self.tmp, "old.apk"), "old")
+        code, _ = self.run_cmd("downgrade", "--apk", apk, "--save-to", os.path.join(self.tmp, "apks"))
+        self.assertNotEqual(code, 0)
+        self.assertEqual(self.st()["installed"], "current")
+        self.assertFalse(any(c[0] == "install" or "uninstall" in " ".join(c) for c in self.st()["log"]))
+
+    def test_full_round_trip(self):
+        d = self.tmp
+        code, out = self.run_cmd("info")
+        self.assertIn("leaves WhatsApp out", out)
+        apk = write(os.path.join(d, "old.apk"), "old")
+        code, out = self.run_cmd("downgrade", "--apk", apk, "--save-to", os.path.join(d, "apks"), "--yes")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.st()["installed"], "legacy")
+        self.assertEqual(sorted(os.listdir(os.path.join(d, "apks"))),
+                         ["base.apk", "split_config.arm64_v8a.apk", "wakit-saved.txt"])
+        code, out = self.run_cmd("backup", "--out", os.path.join(d, "wa.ab"))
+        self.assertEqual(code, 0, out)
+        code, out = self.run_cmd("extract", "--in", os.path.join(d, "wa.ab"), "--out", os.path.join(d, "phone"))
+        self.assertEqual(code, 0, out)
+        self.assertEqual(sorted(os.listdir(os.path.join(d, "phone"))), ["key", "msgstore.db"])
+        real_db(os.path.join(d, "phone", "msgstore.db"), rows=4)  # "edit" it
+        code, out = self.run_cmd("pack", "--in", os.path.join(d, "wa.ab"), "--db", os.path.join(d, "phone", "msgstore.db"),
+                                 "--out", os.path.join(d, "new.ab"))
+        self.assertEqual(code, 0, out)
+        self.assertIn("dropped stale msgstore.db-wal", out)
+        code, out = self.run_cmd("restore", "--in", os.path.join(d, "new.ab"))
+        self.assertNotEqual(code, 0)  # needs --yes
+        code, out = self.run_cmd("restore", "--in", os.path.join(d, "new.ab"), "--yes")
+        self.assertEqual(code, 0, out)
+        _, items = adb_backup.read_ab(bytes.fromhex(self.st()["restored"]))
+        restored = adb_backup.find(adb_backup.members(items), "com.whatsapp", "db/msgstore.db")[1]
+        p = os.path.join(d, "check.db")
+        open(p, "wb").write(restored)
+        self.assertEqual(sqlite3.connect(p).execute("SELECT count(*) FROM message").fetchone()[0], 5)
+        code, out = self.run_cmd("upgrade", "--apks", os.path.join(d, "apks"), "--no-launch")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.st()["installed"], "current")
+
+    def test_restore_refused_by_current_whatsapp(self):
+        code, out = self.run_cmd("restore", "--in", self.ab, "--yes")
+        self.assertNotEqual(code, 0)
+        self.assertIn("would ignore the restore", out)
+        self.assertFalse(any(c[0] == "restore" for c in self.st()["log"]))
+
+    def test_doctor_reads_ab(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit):
+            doctor.main(["--path", self.ab])
+        self.assertIn("Android adb backup", buf.getvalue())
+        self.assertIn("databases: msgstore.db", buf.getvalue())
+
+
 class Plumbing(unittest.TestCase):
     def test_every_command_builds(self):
         for name in cli.COMMANDS:
@@ -294,6 +527,23 @@ class Plumbing(unittest.TestCase):
                          ["device", "--package", "com.whatsapp.w4b", "info"])
         with self.assertRaises(ValueError):
             gui.build_argv({"cmd": "import", "args": {}})
+
+    def test_gui_device_status_parsing(self):
+        text = ("* daemon started successfully\nList of devices attached\n"
+                "R58M123 device usb:1-1 product:beyond1 model:SM_G973F device:beyond1 transport_id:1\n"
+                "192.168.1.20:5555 unauthorized transport_id:2\n\n")
+        self.assertEqual(gui.parse_adb_devices(text), [
+            {"serial": "R58M123", "state": "device", "model": "SM G973F"},
+            {"serial": "192.168.1.20:5555", "state": "unauthorized", "model": ""}])
+
+    def test_gui_knows_adb_backup(self):
+        cmd = next(c for c in gui.schema()["commands"] if c["name"] == "adb-backup")
+        self.assertEqual([s["name"] for s in cmd["subcommands"]],
+                         ["info", "downgrade", "backup", "extract", "pack", "restore", "upgrade"])
+        argv = gui.build_argv({"cmd": "adb-backup", "sub": "pack",
+                               "args": {"input": "~/w.ab", "db": "~/m.db", "out": "~/n.ab", "yes": True}})
+        self.assertEqual(argv, ["adb-backup", "pack", "--in", os.path.expanduser("~/w.ab"), "--db",
+                                os.path.expanduser("~/m.db"), "--out", os.path.expanduser("~/n.ab")])
 
 
 if __name__ == "__main__":

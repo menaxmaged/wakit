@@ -5,6 +5,7 @@ Point --path at any of:
   ChatStorage.sqlite                       the iPhone database
   a folder with Manifest.db                an unencrypted iPhone backup (also checked for restore problems)
   msgstore.db.crypt14 / .crypt15           an Android encrypted backup (add --key to look inside)
+  whatsapp.ab                              an `adb backup` file (add --key with its password, if it has one)
   an "Export chat" .zip / .txt / folder
 
 WhatsApp changes its database layout every few months. If a table or column wakit writes to is missing, doctor
@@ -204,6 +205,31 @@ def report_crypt(path, key):
         return report_sqlite(p, "the database inside")
 
 
+def report_ab(path, password):
+    from . import adb_backup as ab
+    head, items = ab.load(path, password)
+    print(f"file:      {path}\nis:        Android adb backup (version {head['version']}"
+          + (", password-protected)" if head["encrypted"] else ")"))
+    pkgs = [p for p in ab.packages(items) if p.startswith("com.whatsapp")]
+    if not ab.describe(items, pkgs[0] if pkgs else "com.whatsapp"):
+        print("whatsapp:  no databases - the phone left WhatsApp out (see `wakit adb-backup info`)")
+        return False
+    _, db = ab.find(items, pkgs[0], "db/msgstore.db")
+    if db is None:
+        return True
+    with tempfile.TemporaryDirectory() as tmp:
+        p = os.path.join(tmp, "msgstore.db")
+        open(p, "wb").write(db)
+        _, wal = ab.find(items, pkgs[0], "db/msgstore.db-wal")
+        if wal is not None:  # fold it in: report_sqlite opens the file read-only and would not see it
+            open(p + "-wal", "wb").write(wal)
+            con = sqlite3.connect(p)
+            con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            con.close()
+        print()
+        return report_sqlite(p, "msgstore.db in the backup")
+
+
 def report_export(path):
     from . import export_import as w
     with tempfile.TemporaryDirectory() as tmp:
@@ -223,7 +249,8 @@ def report_export(path):
 def build_parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--path", required=True, help="database, iPhone backup folder, .crypt14/.crypt15, or chat export")
-    p.add_argument("--key", help="for .crypt14/.crypt15: the 64-digit key or key file, to check what's inside")
+    p.add_argument("--key", help="for .crypt14/.crypt15: the 64-digit key or key file, to check what's inside; "
+                                 "for a password-protected .ab: its password")
     return p
 
 
@@ -237,6 +264,8 @@ def main(argv=None):
         ok = report_backup(path)
     elif os.path.isdir(path) or path.lower().endswith((".zip", ".txt")):
         ok = report_export(path)
+    elif open(path, "rb").read(15) == b"ANDROID BACKUP\n":
+        ok = report_ab(path, a.key)
     elif open(path, "rb").read(16) == b"SQLite format 3\x00":
         ok = report_sqlite(path)
     elif ".crypt1" in os.path.basename(path):

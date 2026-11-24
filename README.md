@@ -62,7 +62,7 @@ Device tools, only for the steps that touch a phone:
 | Android (`device`, `--push`) | `brew install android-platform-tools` | `apt install adb` |
 | iPhone (`ios-backup backup/restore`) | `brew install libimobiledevice` | `apt install libimobiledevice-utils` |
 
-Most Android steps work on a **rooted** phone, because WhatsApp's database lives in `/data/data/com.whatsapp`, where only root can read and write. **No root?** Use the phone's encrypted backup instead. See [workflow 5](https://github.com/menaxmaged/wakit#5-no-root-edit-androids-encrypted-backup-experimental). That needs one extra package: `pip install "wakit[crypt]"`. The iPhone side needs **no jailbreak**. It works through an ordinary unencrypted backup.
+Most Android steps work on a **rooted** phone, because WhatsApp's database lives in `/data/data/com.whatsapp`, where only root can read and write. **No root?** There are two routes, both experimental: `adb backup` / `adb restore` ([workflow 6](https://github.com/menaxmaged/wakit#6-no-root-adb-backup-and-restore-experimental)), or the phone's encrypted backup ([workflow 5](https://github.com/menaxmaged/wakit#5-no-root-edit-androids-encrypted-backup-experimental)), which needs one extra package: `pip install "wakit[crypt]"`. The iPhone side needs **no jailbreak**. It works through an ordinary unencrypted backup.
 
 ## The GUI
 
@@ -72,9 +72,10 @@ wakit gui
 
 This opens a page served by your computer only (`127.0.0.1`, with a one-time access token in the link). It has:
 
-- **Guides**: the workflows below, step by step. Each step opens the matching tool.
-- **A form for every command**, with file pickers, so you never type a path.
-- **Dry run / Apply** buttons and a live log of each run.
+- **Guided workflows.** Pick a goal ("Add an exported chat to Android", "No root: adb backup & restore", ...) and go through it one step at a time. Choose a working folder once and every step fills in its own paths. Finished steps get a tick, and you can pick up where you left off.
+- **Plain-language forms** for every command. The options you need come first, the rest sit under "More options", and file pickers mean you never type a path.
+- **A phone indicator** in the header: which Android phone and iPhone are plugged in, and whether the phone is still waiting for you to tap "Allow".
+- **Dry run / Apply** buttons, a live, colour-coded log of each run, and a confirmation before anything that replaces data on a phone. Backup keys and passwords are never saved in the browser.
 
 ![The wakit GUI: step-by-step guides for each workflow](https://raw.githubusercontent.com/menaxmaged/wakit/main/docs/assets/gui.jpg)
 
@@ -153,15 +154,38 @@ wakit crypt encrypt --in msgstore.db --like msgstore.db.crypt15 --key "<your 64-
 3. Put the file back. Copy `new/msgstore.db.crypt15` into the same `Databases/` folder on the phone, replacing the old file (keep a copy of it). Copy any media into `WhatsApp/Media/`.
 4. Reinstall WhatsApp, or clear its data. Verify your number and tap **Restore** when it finds the local backup.
 
-`crypt` also opens `.crypt14` backups using the 158-byte `key` file from `/data/data/com.whatsapp/files/key`. Copying that file needs root once. Decrypting and re-encrypting is verified on real crypt14 backups, and `encrypt` checks its own output by decrypting it again. WhatsApp actually restoring an edited backup hasn't been tested on a phone yet, so keep the original file.
+`crypt` also opens `.crypt14` backups using the 158-byte `key` file from `/data/data/com.whatsapp/files/key`. Copying that file needs root once, or no root with `wakit adb-backup extract` (workflow 6). Decrypting and re-encrypting is verified on real crypt14 backups, and `encrypt` checks its own output by decrypting it again. WhatsApp actually restoring an edited backup hasn't been tested on a phone yet, so keep the original file.
+
+### 6. No root: adb backup and restore (experimental)
+
+`adb backup` copies an app's whole data folder, including `msgstore.db`, with no root. Current WhatsApp opts out of it (`allowBackup=false`), and Android 12+ leaves out every app built for Android 12+. An old official WhatsApp (such as 2.11.431) has neither problem. So wakit saves your installed WhatsApp, puts the old one over your kept data, backs up, and restores the edited copy. Then your WhatsApp goes back on top. Android runs backup and restore without starting the old app.
+
+```sh
+wakit adb-backup info                                     # Android/WhatsApp versions, and whether adb backup can reach WhatsApp
+wakit adb-backup downgrade --apk WhatsApp-2.11.431.apk --save-to wa-apks/ --yes
+wakit adb-backup backup --out whatsapp.ab                 # tap "Back up my data" on the phone
+wakit adb-backup extract --in whatsapp.ab --out phone/    # msgstore.db, wa.db, stickers.db and the crypt14 `key`
+wakit import --db phone/msgstore.db --export "WhatsApp Chat - Alex.zip" --contact 15551234567 --apply   # or from-ios, merge, to-ios...
+wakit adb-backup pack --in whatsapp.ab --db phone/msgstore.db --out whatsapp-new.ab
+wakit adb-backup restore --in whatsapp-new.ab --yes       # tap "Restore my data" on the phone
+wakit adb-backup upgrade --apks wa-apks/                  # your own WhatsApp back, then open it
+```
+
+- **Before you start:** make a normal WhatsApp chat backup, turn on airplane mode, and don't open WhatsApp until `upgrade` is done.
+- **The old APK** isn't included: WhatsApp's APKs can't be redistributed.
+- **Android 11 and newer** often refuse to install an older version over kept data (`INSTALL_FAILED_VERSION_DOWNGRADE`). `downgrade` then reinstalls your saved WhatsApp at once, and workflow 5 is the no-root route left. On Android 14+ wakit adds `--bypass-low-target-sdk-block` for you.
+- **Backup passwords** work: pass `--password` to `extract`, `pack` and `restore`. Some phones insist on one, which is then the screen-lock PIN.
+- `pack` keeps every other file and the archive order exactly, drops the stale `-wal`/`-shm` files of the databases it replaces, and reads its output back to check it.
+- The `.ab` reading and writing, password encryption included, is tested against Java's own key derivation. The round trip on a real phone hasn't been tested yet, so keep your normal WhatsApp backup.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `doctor` | check any database, iPhone backup, `.crypt` file or export: what it is, what's in it, and whether wakit knows its layout. **Run it first.** |
+| `doctor` | check any database, iPhone backup, `.crypt` file, `.ab` adb backup or export: what it is, what's in it, and whether wakit knows its layout. **Run it first.** |
 | `import` | "Export chat" .zip/.txt → Android `msgstore.db` |
 | `crypt info \| decrypt \| encrypt` | open and re-seal `.crypt14`/`.crypt15` backups (no root) |
+| `adb-backup info \| downgrade \| backup \| extract \| pack \| restore \| upgrade` | no root: get WhatsApp's data out with `adb backup` and back with `adb restore` (experimental) |
 | `merge` | one Android `msgstore.db` → another (messages, media, replies, reactions, calls) |
 | `stickers` | favourite/recent stickers between Android `stickers.db` files |
 | `from-ios` | iPhone backup → Android `msgstore.db` |

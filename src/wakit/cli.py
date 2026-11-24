@@ -9,6 +9,7 @@ COMMANDS = {
     "import": ("export_import", "add an \"Export chat\" .zip/.txt to an Android msgstore.db", "Android"),
     "merge": ("db_merge", "copy the history of one Android msgstore.db into another", "Android"),
     "crypt": ("crypt", "decrypt / re-encrypt .crypt14/.crypt15 backups (no root needed)", "Android"),
+    "adb-backup": ("adb_backup", "no root: adb backup / restore WhatsApp's data (experimental)", "Android"),
     "stickers": ("sticker_merge", "copy favourite/recent stickers between Android stickers.db files", "Android"),
     "from-ios": ("from_ios", "iPhone backup -> Android msgstore.db", "iPhone"),
     "stickers-from-ios": ("ios_stickers", "iPhone backup stickers -> Android stickers.db", "iPhone"),

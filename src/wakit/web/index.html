@@ -6,21 +6,21 @@
 <title>wakit</title>
 <style>
 :root {
-  --bg: #f6f7f5; --panel: #ffffff; --ink: #17201b; --muted: #5d6a63; --line: #e1e6e2;
-  --accent: #128c5e; --accent-ink: #ffffff; --accent-soft: #e3f4ec; --warn: #a15c00; --warn-soft: #fff3df;
+  --bg: #f6f7f5; --panel: #ffffff; --ink: #17201b; --muted: #5d6a63; --line: #e1e6e2; --hover: #eef1ef;
+  --accent: #128c5e; --accent-ink: #ffffff; --accent-soft: #e3f4ec; --warn: #8a4f00; --warn-soft: #fff3df;
   --danger: #b42318; --danger-soft: #fde8e6; --console: #0f1512; --console-ink: #d7e4dc; --focus: #1e9e6c;
-  --radius: 10px; --shadow: 0 1px 2px rgba(16, 24, 20, .06), 0 4px 16px rgba(16, 24, 20, .05);
+  --radius: 12px; --shadow: 0 1px 2px rgba(16, 24, 20, .06), 0 4px 16px rgba(16, 24, 20, .05);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a;
+    --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a; --hover: #1a2420;
     --accent: #2bbf85; --accent-ink: #04120b; --accent-soft: #143326; --warn: #f0b45a; --warn-soft: #2e2413;
     --danger: #ff7a6e; --danger-soft: #34181a; --console: #07100c; --console-ink: #cfe0d6; --focus: #3ad69a;
     --shadow: none;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a;
+  --bg: #0d1210; --panel: #141b18; --ink: #e5ece8; --muted: #93a39a; --line: #24302a; --hover: #1a2420;
   --accent: #2bbf85; --accent-ink: #04120b; --accent-soft: #143326; --warn: #f0b45a; --warn-soft: #2e2413;
   --danger: #ff7a6e; --danger-soft: #34181a; --console: #07100c; --console-ink: #cfe0d6; --focus: #3ad69a;
   --shadow: none;
@@ -30,115 +30,227 @@ html, body { margin: 0; height: 100%; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.app { display: grid; grid-template-columns: 250px 1fr; grid-template-rows: 56px 1fr; height: 100vh; }
-header { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
-.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 15px; }
+code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.app { display: grid; grid-template-columns: 260px minmax(0, 1fr); grid-template-rows: 58px minmax(0, 1fr); height: 100vh; }
+
+/* header */
+header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); background: var(--panel); position: relative; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -.01em; background: none; border: 0; padding: 0; cursor: pointer; }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 15px; }
 .ver { color: var(--muted); font-weight: 500; font-size: 12px; }
 .spacer { flex: 1; }
-.serial { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
-.serial input { width: 190px; }
-.iconbtn { border: 1px solid var(--line); background: transparent; border-radius: 8px; height: 32px; padding: 0 10px; cursor: pointer; }
-nav { border-right: 1px solid var(--line); overflow: auto; padding: 14px 10px 30px; background: var(--panel); }
-nav h4 { margin: 16px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-nav a { display: block; padding: 7px 10px; border-radius: 7px; color: var(--ink); text-decoration: none; cursor: pointer; }
-nav a small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
-nav a:hover { background: var(--bg); }
-nav a.active { background: var(--accent-soft); }
-nav a.active b { color: var(--accent); }
-main { overflow: auto; padding: 26px 30px 60px; min-width: 0; }
-.wrap { max-width: 980px; margin: 0 auto; }
-h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -.02em; }
-h2 { font-size: 16px; margin: 0 0 10px; }
-.lead { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-.guide ol { margin: 8px 0 0; padding-left: 0; list-style: none; counter-reset: s; }
-.guide li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 7px 0; border-top: 1px dashed var(--line); }
-.guide li:first-child { border-top: 0; }
-.guide li::before { content: counter(s); width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
-.guide li a { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
-.guide li a:hover { text-decoration: underline; }
-.guide li span { color: var(--muted); }
-.note { border-radius: 8px; padding: 10px 12px; margin: 12px 0; font-size: 13px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; white-space: nowrap; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+.pill:hover { background: var(--hover); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.on { background: #22a06b; } .dot.wait { background: #e6a23c; } .dot.off { background: transparent; border: 1.5px solid var(--muted); }
+.iconbtn { border: 1px solid var(--line); background: transparent; border-radius: 9px; height: 34px; min-width: 34px; padding: 0 10px; cursor: pointer; }
+.iconbtn:hover { background: var(--hover); }
+.iconbtn svg { display: block; margin: auto; }
+#menu { display: none; }
+.popover { position: absolute; top: 54px; right: 60px; width: min(380px, calc(100vw - 32px)); z-index: 20; display: none; }
+.popover.show { display: block; }
+.popover h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.devlist { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
+.devlist li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; }
+.devlist li .grow { flex: 1; min-width: 0; }
+.devlist small { display: block; color: var(--muted); }
+
+/* nav */
+nav { border-right: 1px solid var(--line); overflow: auto; padding: 12px 10px 30px; background: var(--panel); }
+nav h4 { margin: 18px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+nav h4:first-child { margin-top: 4px; }
+.navbtn { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 8px; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.navbtn small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.navbtn:hover { background: var(--hover); }
+.navbtn.active { background: var(--accent-soft); }
+.navbtn.active b { color: var(--accent); }
+nav details summary { list-style: none; cursor: pointer; margin: 18px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+nav details summary::-webkit-details-marker { display: none; }
+nav details summary::before { content: "▸ "; } nav details[open] summary::before { content: "▾ "; }
+nav details .sub { margin: 10px 10px 2px; font-size: 11.5px; color: var(--muted); }
+
+/* main */
+main { overflow: auto; padding: 28px 32px 70px; min-width: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; line-height: 1.2; }
+h2 { font-size: 18px; margin: 0 0 8px; letter-spacing: -.01em; }
+.lead { color: var(--muted); margin: 0 0 20px; max-width: 72ch; font-size: 15px; }
+.crumb { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-weight: 600; margin-bottom: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+.note { border-radius: 9px; padding: 10px 12px; margin: 12px 0; font-size: 13.5px; }
 .note.warn { background: var(--warn-soft); color: var(--warn); }
 .note.danger { background: var(--danger-soft); color: var(--danger); }
 .note.info { background: var(--accent-soft); color: var(--ink); }
-.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 16px; }
-.tab { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--hover); color: var(--muted); }
+.tag.root { background: var(--warn-soft); color: var(--warn); }
+.tag.noroot { background: var(--accent-soft); color: var(--accent); }
+.tag.exp { background: var(--danger-soft); color: var(--danger); }
+
+/* home */
+.ask { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 18px; }
+.ask b { margin-right: 4px; }
+.chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.chip:hover { background: var(--hover); }
+.chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+.goal { text-align: left; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: border-color .15s, transform .15s; }
+.goal:hover { border-color: var(--accent); transform: translateY(-1px); }
+.goal .icon { font-size: 26px; line-height: 1; }
+.goal h2 { margin: 0; }
+.goal p { margin: 0; color: var(--muted); flex: 1; }
+.goal .go { color: var(--accent); font-weight: 700; }
+.goal.dim { opacity: .45; }
+.goal.dim:hover { opacity: .8; }
+.extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 18px; }
+.extras .card { display: flex; gap: 14px; align-items: center; }
+.extras .card p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+/* guide */
+.ws { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 18px; padding: 14px 16px; }
+.ws label { font-weight: 700; }
+.ws .row { flex: 1; min-width: 240px; }
+.ws small { flex-basis: 100%; color: var(--muted); }
+.guide { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
+.steps { list-style: none; margin: 0; padding: 8px; position: sticky; top: 0; }
+.steps li button { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; width: 100%; text-align: left; border: 0; background: none; padding: 8px; border-radius: 9px; cursor: pointer; color: var(--ink); }
+.steps li button:hover { background: var(--hover); }
+.steps li.cur button { background: var(--accent-soft); }
+.num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; border: 1.5px solid var(--line); color: var(--muted); background: var(--panel); }
+.steps li.cur .num { border-color: var(--accent); color: var(--accent); }
+.steps li.done .num { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps small { display: block; color: var(--muted); font-size: 11.5px; }
+.stepno { color: var(--muted); font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.what { margin: 0 0 14px; max-width: 72ch; }
+.checklist { list-style: none; padding: 0; margin: 0 0 6px; display: grid; gap: 8px; }
+.checklist label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
+.checklist input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.stepnav { display: flex; gap: 10px; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.alts { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+
+/* forms */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
+.tab { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 13px; cursor: pointer; }
+.tab:hover { background: var(--hover); }
 .tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.fields { display: grid; gap: 14px; }
-.field label { display: block; font-weight: 600; margin-bottom: 4px; }
-.field label code { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 6px; }
-.field .req { color: var(--danger); margin-left: 2px; }
+.fields { display: grid; gap: 16px; }
+.field > label { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-weight: 600; margin-bottom: 5px; }
+.field > label code { font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.req { color: var(--danger); }
 .field .help { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
 .row { display: flex; gap: 8px; }
-input[type=text], select { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+input[type=text], input[type=password], select { width: 100%; height: 38px; padding: 0 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); min-width: 0; }
 .check { display: flex; gap: 10px; align-items: flex-start; }
-.check input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); }
-.btn { height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; white-space: nowrap; }
+.check input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+.check label { font-weight: 600; cursor: pointer; }
+details.more { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+details.more > summary { cursor: pointer; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+details.more .fields { margin-top: 12px; }
+.btn { height: 38px; padding: 0 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--hover); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.06); background: var(--accent); }
 .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
-.btn:disabled { opacity: .5; cursor: default; }
-.actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
-.cmdline { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 14px; overflow-x: auto; white-space: pre; color: var(--muted); }
+.btn.danger:hover:not(:disabled) { filter: brightness(1.06); background: var(--danger); }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.actions { display: flex; gap: 10px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+.actions .why { color: var(--danger); font-size: 13px; }
+details.cmd { margin-top: 14px; }
+details.cmd summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
+.cmdline { position: relative; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 74px 9px 11px; margin-top: 8px; overflow-x: auto; white-space: pre; color: var(--muted); }
+.cmdline button { position: absolute; top: 5px; right: 5px; height: 28px; font-size: 12px; padding: 0 10px; }
 details.doc { margin: 0 0 16px; }
 details.doc summary { cursor: pointer; color: var(--accent); font-weight: 600; }
-details.doc pre { white-space: pre-wrap; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; color: var(--ink); }
+details.doc pre { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 12px; color: var(--ink); }
+
+/* console */
 .console { margin-top: 18px; background: var(--console); color: var(--console-ink); border-radius: var(--radius); overflow: hidden; display: none; }
 .console.show { display: block; }
 .console .bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 12.5px; }
 .console .bar .st { font-weight: 700; }
+.console .bar button { color: inherit; border-color: rgba(255,255,255,.2); height: 28px; font-size: 12px; }
 .console pre { margin: 0; padding: 12px 14px; max-height: 420px; overflow: auto; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; unicode-bidi: plaintext; }
+.console .l-bad { color: #ff8a80; font-weight: 700; } .console .l-warn { color: #fbbf24; } .console .l-good { color: #6ee7a8; } .console .l-cmd { color: #8aa79a; }
 .ok { color: #4ade80; } .bad { color: #ff8a80; } .run { color: #fbbf24; }
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; place-items: center; padding: 16px; z-index: 10; }
+.result { margin-top: 12px; }
+
+/* modals */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; place-items: center; padding: 16px; z-index: 30; }
 .modal.show { display: grid; }
-.picker { width: min(640px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
-.picker .path { font: 12.5px ui-monospace, Menlo, monospace; color: var(--muted); word-break: break-all; margin: 6px 0 10px; }
-.picker ul { list-style: none; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 8px; flex: 1; min-height: 200px; }
-.picker li { padding: 7px 10px; cursor: pointer; display: flex; gap: 8px; border-top: 1px solid var(--line); }
+.picker { width: min(680px, 100%); max-height: 84vh; display: flex; flex-direction: column; gap: 10px; }
+.picker h2 { margin: 0; }
+.picker .hint { color: var(--muted); font-size: 12.5px; margin: -4px 0 0; }
+.picker ul { list-style: none; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 9px; flex: 1; min-height: 220px; }
+.picker li { padding: 8px 11px; cursor: pointer; display: flex; gap: 9px; border-top: 1px solid var(--line); }
 .picker li:first-child { border-top: 0; }
 .picker li:hover, .picker li.sel { background: var(--accent-soft); }
-.picker .foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.picker li .ext { margin-left: auto; color: var(--muted); font-size: 12px; }
+.foot { display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.dialog { width: min(480px, 100%); }
+.dialog p { white-space: pre-line; }
 .empty { color: var(--muted); padding: 10px; }
+
+@media (max-width: 860px) {
+  .guide { grid-template-columns: minmax(0, 1fr); }
+  .steps { position: static; display: flex; overflow-x: auto; gap: 4px; padding: 6px; }
+  .steps li button { grid-template-columns: 26px auto; white-space: nowrap; }
+  .steps small { display: none; }
+}
 @media (max-width: 760px) {
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; height: auto; min-height: 100vh; }
-  header { flex-wrap: wrap; padding: 10px 16px; height: auto; gap: 10px; }
+  header { flex-wrap: wrap; padding: 10px 16px; gap: 8px; }
   .spacer { display: none; }
-  .serial { order: 3; width: 100%; }
-  .serial input { width: auto; flex: 1; min-width: 0; }
   .brand { flex: 1; }
-  .grid { grid-template-columns: minmax(0, 1fr); }
+  .pill { order: 3; flex: 1; max-width: none; }
+  .popover { right: 16px; top: 100px; }
+  #menu { display: inline-block; }
+  nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 60vh; display: none; }
+  nav.open { display: block; }
+  main { padding: 18px 16px 50px; }
   .row { flex-wrap: wrap; }
-  nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 42vh; }
-  main { padding: 18px 16px 40px; }
+  .goals { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div class="brand"><div class="logo" aria-hidden="true">⇄</div>wakit <span class="ver" id="ver"></span></div>
+    <button class="brand" id="home" title="Home"><span class="logo" aria-hidden="true">⇄</span>wakit <span class="ver" id="ver"></span></button>
     <div class="spacer"></div>
-    <label class="serial" title="adb device to use when more than one is connected (like adb -s)">Android device
-      <input type="text" id="serial" placeholder="auto (or 192.168.1.20:5555)"></label>
-    <button class="iconbtn" id="theme" title="Switch light / dark">◐</button>
+    <button class="pill" id="devpill" aria-haspopup="dialog" aria-expanded="false" title="Connected phones"><span class="dot" id="devdot"></span><span id="devtext">Looking for phones…</span></button>
+    <button class="iconbtn" id="theme" title="Switch light / dark" aria-label="Switch light or dark theme"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    <button class="iconbtn" id="menu" aria-controls="nav" aria-expanded="false">Menu</button>
+    <div class="card popover" id="devpop" role="dialog" aria-label="Connected phones">
+      <h3>Android (adb)</h3><ul class="devlist" id="dev-android"></ul>
+      <h3>iPhone</h3><ul class="devlist" id="dev-iphone"></ul>
+      <div class="field"><label for="serial">Use this Android device</label>
+        <div class="row"><input type="text" id="serial" placeholder="automatic, or 192.168.1.20:5555" spellcheck="false" autocomplete="off">
+        <button class="btn" id="devrefresh">Refresh</button></div>
+        <div class="help">Only needed when more than one Android device is connected, or for Wi-Fi adb.</div></div>
+    </div>
   </header>
-  <nav id="nav" aria-label="Commands"></nav>
-  <main><div class="wrap" id="view"></div></main>
+  <nav id="nav" aria-label="wakit"></nav>
+  <main id="main"><div class="wrap" id="view"></div></main>
 </div>
 
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="pk-title">
+<div class="modal" id="pk" role="dialog" aria-modal="true" aria-labelledby="pk-title">
   <div class="card picker">
     <h2 id="pk-title">Choose a file or folder</h2>
-    <div class="path" id="pk-path"></div>
+    <p class="hint">Click a file, then <b>Choose</b>. To use a folder, open it and press <b>Choose</b> with nothing selected.</p>
+    <div class="row"><button class="btn" id="pk-up" title="Parent folder">↑ Up</button><input type="text" id="pk-path" spellcheck="false" aria-label="Folder"></div>
+    <input type="text" id="pk-filter" placeholder="Filter by name…" aria-label="Filter">
     <ul id="pk-list"></ul>
-    <div class="foot">
-      <button class="btn" id="pk-up">Up</button>
-      <span class="spacer"></span>
-      <button class="btn" id="pk-cancel">Cancel</button>
-      <button class="btn primary" id="pk-ok">Use this</button>
-    </div>
+    <div class="foot"><span class="mono" id="pk-sel" style="color:var(--muted);flex:1;word-break:break-all"></span>
+      <button class="btn" id="pk-cancel">Cancel</button><button class="btn primary" id="pk-ok">Choose</button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title">
+  <div class="card dialog">
+    <h2 id="dlg-title"></h2>
+    <p id="dlg-text"></p>
+    <div class="foot"><button class="btn" id="dlg-no">Cancel</button><button class="btn primary" id="dlg-yes">OK</button></div>
   </div>
 </div>
 
@@ -149,14 +261,17 @@ const h = (tag, attrs = {}, ...kids) => {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "checked") el.checked = !!v;
+    else if (k === "value") el.value = v;
     else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
   }
-  for (const kid of kids.flat()) if (kid != null) el.append(kid.nodeType ? kid : String(kid));
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : String(kid));
   return el;
 };
 const store = {
   get(k, d) { try { const v = localStorage.getItem("wakit:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem("wakit:" + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem("wakit:" + k); } catch {} },
 };
 async function api(path, body) {
   const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "X-Wakit-Token": TOKEN, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -164,207 +279,538 @@ async function api(path, body) {
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
+const q = s => /^[\w@%+=:,./~-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`;
 
-// guides: the workflows wakit was built for; each step opens a command form
-const GUIDES = [
-  { title: "Add an exported chat to Android", tag: "Android, rooted",
-    intro: "Turn a WhatsApp “Export chat” (.zip or _chat.txt, with media) into real history on your Android phone.",
-    steps: [["device", "info", "Check the phone is connected and rooted"],
-            ["device", "pull", "Copy WhatsApp's databases off the phone"],
-            ["import", null, "Dry run, check the counts, then Apply (pass “me” for exports made on the other person's phone)"],
-            ["device", "install", "Put the database back and start WhatsApp"]] },
-  { title: "iPhone → Android", tag: "rooted Android",
-    intro: "Bring the chats of an iPhone (from an unencrypted backup) onto an Android phone, merged with what is already there.",
-    steps: [["ios-backup", "backup", "Make an unencrypted backup of the iPhone (or use one from Finder / 3uTools)"],
-            ["device", "pull", "Copy the Android phone's databases"],
-            ["from-ios", null, "Dry run, then Apply with Push to send the media"],
-            ["stickers-from-ios", null, "Optional: your favourite stickers too"],
-            ["device", "install", "Put the database back and start WhatsApp"]] },
-  { title: "Android → iPhone", tag: "free, no Move to iOS",
-    intro: "Merge an Android phone's WhatsApp into an iPhone backup, then restore that backup to the iPhone.",
-    warn: "A restore replaces everything on the iPhone with the backup. Work on a fresh full backup and keep a copy of it. Never restore a backup cut down to WhatsApp only.",
-    steps: [["device", "pull", "Copy the Android databases"],
-            ["device", "pull-media", "Copy the Android media (photos, voice notes...)"],
-            ["ios-backup", "backup", "Make a fresh full, unencrypted iPhone backup - then copy it"],
-            ["to-ios", null, "Dry run, then Apply into the copy"],
-            ["ios-backup", "restore", "Restore the edited backup (Find My off, iPhone unlocked)"]] },
-  { title: "No root: edit the encrypted backup", tag: "experimental",
-    intro: "Use WhatsApp's own local backup (msgstore.db.crypt15 + your 64-digit key) instead of root access.",
-    warn: "Keep the original .crypt15. Restoring an edited backup means reinstalling WhatsApp and tapping Restore.",
-    steps: [["crypt", "info", "Check the backup file you copied off the phone"],
-            ["crypt", "decrypt", "Decrypt it with your 64-digit key"],
-            ["import", null, "Add chats (or use from-ios / merge) on the decrypted msgstore.db"],
-            ["crypt", "encrypt", "Seal it again, using the original file as the template"]] },
-  { title: "Merge two Android databases", tag: "Android",
-    intro: "Copy the history of an old msgstore.db (old phone, mod, adb backup) into the current one, without duplicates.",
-    steps: [["device", "pull", "Copy the current databases"],
-            ["merge", null, "Dry run, then Apply (Fuzzy skips messages that came in through exports)"],
-            ["stickers", null, "Optional: favourite stickers from the old stickers.db"],
-            ["device", "install", "Put the database back"]] },
+// ---- words: what each command and option is called on the page ----------------------------------------------
+const TITLES = {
+  doctor: "Check a file", import: "Add a chat export", merge: "Merge two Android databases",
+  crypt: "Encrypted backups (.crypt14/15)", "adb-backup": "adb backup & restore", stickers: "Copy stickers (Android)",
+  "from-ios": "iPhone → Android", "stickers-from-ios": "iPhone stickers → Android", "to-ios": "Android → iPhone",
+  "ios-backup": "iPhone backups", device: "Rooted Android phone",
+};
+const LABELS = {
+  db: "WhatsApp database (msgstore.db)", export: "Chat export (.zip or _chat.txt)", contact: "Contact's phone number",
+  me: "Your name in the export", wa_db: "Contacts database (wa.db)", tz: "Time zone", date_order: "Date order",
+  media_out: "Save media to", push: "Copy the media to the phone too", package: "App package",
+  phone_root: "WhatsApp folder on the phone", old: "Old database (copy from)", new: "Current database (copy into)",
+  fuzzy: "Skip near-duplicates", skip_types: "Message types to skip", from_files: "Old sticker files folder",
+  files_out: "Save sticker files to", backup: "iPhone backup folder", media: "Android media folder", out: "Save to",
+  input: "File", like: "Original backup (used as a template)", key: "Backup key", force: "Overwrite if it already exists",
+  fix: "Fix the problems it finds", enable: "Turn WhatsApp back on right away", target: "File name on the phone",
+  no_launch: "Don't start WhatsApp afterwards", root: "Folder on the phone", path: "File or folder to check",
+  apk: "Old WhatsApp APK", save_to: "Save your current WhatsApp to", apks: "Saved WhatsApp folder",
+  password: "Backup password", stickers_db: "Edited stickers.db",
+  "stickers/db": "Sticker database to add to (stickers.db)", "stickers/src": "Old sticker database",
+  "stickers-from-ios/db": "Sticker database to add to (stickers.db)",
+  "from-ios/db": "Android database (msgstore.db)", "to-ios/db": "Android database (msgstore.db)",
+  "to-ios/backup": "iPhone backup folder (a copy)", "doctor/key": "Key or password (optional)",
+  "crypt/info/input": "Backup file (.crypt14 / .crypt15)", "crypt/decrypt/input": "Backup file (.crypt14 / .crypt15)",
+  "crypt/decrypt/out": "Save the database as", "crypt/encrypt/input": "Edited database (msgstore.db)",
+  "crypt/encrypt/out": "Save the new backup as",
+  "adb-backup/backup/out": "Save the backup as (.ab)", "adb-backup/extract/input": "Backup file (.ab)",
+  "adb-backup/extract/out": "Folder for the databases", "adb-backup/pack/input": "Original backup (.ab)",
+  "adb-backup/pack/db": "Edited msgstore.db", "adb-backup/pack/wa_db": "Edited wa.db",
+  "adb-backup/pack/out": "Save the new backup as (.ab)", "adb-backup/restore/input": "Backup to restore (.ab)",
+  "device/pull/out": "Folder to copy into", "device/install/db": "Database to install",
+  "device/pull-media/out": "Folder to copy into", "device/push-media/src": "Folder holding Media/",
+  "ios-backup/backup/out": "Folder for the backup", "ios-backup/extract/out": "Folder to extract into",
+};
+const SECRET = new Set(["key", "password"]);  // never saved in the browser
+const DANGER = {
+  "ios-backup/restore": "This replaces EVERYTHING on the iPhone with the backup's contents.",
+  "device/install": "This replaces WhatsApp's database on the phone (the old one is overwritten).",
+  "adb-backup/downgrade": "This uninstalls WhatsApp (keeping its chats) and installs the old APK over them. WhatsApp can't be used until the last step puts your version back. Did you make a normal WhatsApp backup first?",
+  "adb-backup/restore": "This replaces all of WhatsApp's data on the phone with the backup's contents.",
+};
+const label = (cmd, sub, f) => LABELS[`${cmd}/${sub}/${f.dest}`] || LABELS[`${cmd}/${f.dest}`] || LABELS[f.dest] ||
+  f.flag.replace(/^--/, "").replace(/-/g, " ").replace(/^./, c => c.toUpperCase());
+
+// ---- guides: the workflows wakit was built for ---------------------------------------------------------------
+// a step runs one command; `fill` paths come from the working folder ({ws}); `show` keeps options out of "More options"
+const ADD_HISTORY = db => [
+  { label: "A chat export", cmd: "import", fill: { db }, show: ["export", "contact", "me"] },
+  { label: "An iPhone backup", cmd: "from-ios", fill: { db } },
+  { label: "An old Android database", cmd: "merge", fill: { new: db }, show: ["old", "fuzzy"] },
 ];
-const DANGER = { "ios-backup/restore": "This replaces EVERYTHING on the iPhone with the backup's contents.", "device/install": "This replaces WhatsApp's database on the phone (the old one is overwritten)." };
+const GUIDES = [
+  { id: "export-android", icon: "💬", title: "Add an exported chat to Android", root: true,
+    short: "Turn a WhatsApp “Export chat” .zip back into real chat history on your Android phone.",
+    intro: "A chat export (.zip or _chat.txt, with its media) becomes real messages in the chat on your phone, in the right order, without duplicates.",
+    steps: [
+      { title: "Connect the phone", cmd: "device", sub: "info",
+        what: "Plug the phone in by USB with USB debugging on. Tap Allow when the phone asks, and let the shell use root in your root app (Magisk, KernelSU…)." },
+      { title: "Copy WhatsApp's databases", cmd: "device", sub: "pull", fill: { out: "{ws}/phone" },
+        what: "Copies msgstore.db, wa.db and stickers.db into your working folder. WhatsApp is switched off while copying so no message is missed, and stays off until the last step." },
+      { title: "Add the chat", cmd: "import", fill: { db: "{ws}/phone/msgstore.db" }, show: ["export", "contact", "me", "push"],
+        what: "Choose the export and type the contact's number with the country code (like 15551234567). Press Dry run first and check the counts, then Apply. Tick “Copy the media to the phone” to bring photos and voice notes along.",
+        tip: "Exported from the other person's phone? Fill in “Your name in the export” exactly as it appears there." },
+      { title: "Put it back and start WhatsApp", cmd: "device", sub: "install", fill: { db: "{ws}/phone/msgstore.db" },
+        what: "Copies the database back with the right owner and security label, then starts WhatsApp. Open the chat: the history is there." },
+    ] },
+  { id: "noroot-adb", icon: "🔓", title: "No root: adb backup & restore", noroot: true, exp: true,
+    short: "Get WhatsApp's database off a phone without root, edit it, and put it back, using adb backup and adb restore.",
+    intro: "Current WhatsApp blocks adb backup, so wakit swaps in an old official WhatsApp for a few minutes (your chats stay on the phone), backs up, and restores the edited copy. Then your WhatsApp goes back on top.",
+    warn: "Experimental: not yet tested on a real phone. Android 11 and newer often refuse the old WhatsApp. wakit then puts yours straight back and nothing changes. If that happens, use the “No root: encrypted backup” guide.",
+    steps: [
+      { title: "Check the phone", cmd: "adb-backup", sub: "info",
+        what: "Connect the phone with USB debugging on and tap Allow. This shows your Android and WhatsApp versions, and whether adb backup can reach WhatsApp." },
+      { title: "Get ready", manual: [
+          "I made a normal WhatsApp backup (Settings → Chats → Chat backup → Back up). It's the way back if anything goes wrong.",
+          "I turned on airplane mode, and I won't open WhatsApp until the last step.",
+          "I have an old official WhatsApp APK that allows backups, such as 2.11.431. wakit can't include one: WhatsApp's APKs can't be shared." ],
+        what: "Three things before the phone is touched." },
+      { title: "Swap in the old WhatsApp", cmd: "adb-backup", sub: "downgrade", fill: { save_to: "{ws}/whatsapp-apks" }, show: ["apk"],
+        what: "Saves your current WhatsApp (all its APK files) into the working folder, then installs the old APK over your chats. If the phone refuses, wakit reinstalls your WhatsApp right away." },
+      { title: "Back up WhatsApp", cmd: "adb-backup", sub: "backup", fill: { out: "{ws}/whatsapp.ab" },
+        what: "Press Run, then unlock the phone and tap “Back up my data”. Leave the password empty. If the phone insists on one, type your screen-lock PIN there and here." },
+      { title: "Take out the databases", cmd: "adb-backup", sub: "extract", fill: { input: "{ws}/whatsapp.ab", out: "{ws}/phone" },
+        what: "Writes msgstore.db, wa.db, stickers.db and the `key` file into the working folder. `key` also opens this phone's .crypt14 backups." },
+      { title: "Add history", alts: ADD_HISTORY("{ws}/phone/msgstore.db"),
+        what: "Add what you came for: a chat export, an iPhone backup, or an old Android database. Dry run first, then Apply." },
+      { title: "Seal it into a new backup", cmd: "adb-backup", sub: "pack",
+        fill: { input: "{ws}/whatsapp.ab", db: "{ws}/phone/msgstore.db", out: "{ws}/whatsapp-new.ab" },
+        what: "Builds a new .ab from the original with your edited database inside, and checks it by reading it back." },
+      { title: "Restore it to the phone", cmd: "adb-backup", sub: "restore", fill: { input: "{ws}/whatsapp-new.ab" },
+        what: "Press Run, then unlock the phone and tap “Restore my data”. Wait until the phone says it's finished." },
+      { title: "Put your WhatsApp back", cmd: "adb-backup", sub: "upgrade", fill: { apks: "{ws}/whatsapp-apks" },
+        what: "Reinstalls the WhatsApp saved in step 3 and opens it. Turn airplane mode off. Updating from the Play Store works too." },
+    ] },
+  { id: "ios-android", icon: "📲", title: "iPhone → Android", root: true,
+    short: "Bring an iPhone's chats onto an Android phone, merged with what's already there.",
+    intro: "Reads an unencrypted iPhone backup and adds its chats, media and stickers to the Android phone's WhatsApp.",
+    steps: [
+      { title: "Back up the iPhone", cmd: "ios-backup", sub: "backup", fill: { out: "{ws}/iphone-backup" }, skippable: true,
+        what: "Connect the iPhone and tap Trust. This makes a normal, unencrypted backup. Already have one from Finder or 3uTools? Skip this step." },
+      { title: "Copy the Android databases", cmd: "device", sub: "pull", fill: { out: "{ws}/phone" },
+        what: "Copies WhatsApp's databases off the rooted Android phone into the working folder." },
+      { title: "Add the iPhone's chats", cmd: "from-ios", fill: { db: "{ws}/phone/msgstore.db" }, browse: { backup: "{ws}/iphone-backup" }, show: ["backup", "push"],
+        what: "For the backup, pick the folder named after the iPhone's id (inside iphone-backup). Dry run, then Apply. Tick “Copy the media to the phone” for photos and voice notes." },
+      { title: "Stickers too", cmd: "stickers-from-ios", optional: true, browse: { backup: "{ws}/iphone-backup" },
+        fill: { db: "{ws}/phone/stickers.db", files_out: "{ws}/Stickers" }, what: "Your favourite stickers from the iPhone." },
+      { title: "Put it back and start WhatsApp", cmd: "device", sub: "install", fill: { db: "{ws}/phone/msgstore.db" },
+        what: "Copies the database back to the phone and starts WhatsApp." },
+    ] },
+  { id: "android-ios", icon: "🍏", title: "Android → iPhone", root: true,
+    short: "Merge an Android phone's chats into an iPhone, free, without Move to iOS.",
+    intro: "Adds the Android history to a fresh iPhone backup, then restores that backup to the iPhone. No jailbreak needed.",
+    warn: "A restore replaces everything on the iPhone with the backup. Use a backup made just before, keep a copy of it, and never restore a backup cut down to WhatsApp only.",
+    steps: [
+      { title: "Copy the Android databases", cmd: "device", sub: "pull", fill: { out: "{ws}/phone" },
+        what: "Copies WhatsApp's databases off the rooted Android phone.", tip: "No root? Get msgstore.db with steps 1–5 of the “No root: adb backup & restore” guide, then skip this step." },
+      { title: "Copy the Android media", cmd: "device", sub: "pull-media", fill: { out: "{ws}/phone-media" },
+        what: "Photos, videos, voice notes and documents, in one fast stream." },
+      { title: "Back up the iPhone", cmd: "ios-backup", sub: "backup", fill: { out: "{ws}/iphone-backup" },
+        what: "A fresh, full, unencrypted backup. When it's done, duplicate the backup folder (the one named after the iPhone's id) and use the copy in the next step." },
+      { title: "Add the Android chats", cmd: "to-ios", fill: { db: "{ws}/phone/msgstore.db", wa_db: "{ws}/phone/wa.db", media: "{ws}/phone-media" },
+        browse: { backup: "{ws}/iphone-backup" }, show: ["backup", "media"], what: "Pick the copy of the backup. Dry run, then Apply." },
+      { title: "Restore the iPhone", cmd: "ios-backup", sub: "restore", browse: { backup: "{ws}/iphone-backup" },
+        what: "Turn off Find My and keep the iPhone unlocked (Auto-Lock: Never) until it restarts. In WhatsApp, verify your number and skip any iCloud restore it offers." },
+    ] },
+  { id: "noroot-crypt", icon: "🔐", title: "No root: encrypted backup", noroot: true, exp: true,
+    short: "Edit WhatsApp's own local backup (msgstore.db.crypt15) with your 64-digit key.",
+    intro: "WhatsApp's end-to-end encrypted backup can be opened with your 64-digit key, edited, sealed again, and restored by reinstalling WhatsApp.",
+    warn: "Keep the original .crypt15. Restoring means reinstalling WhatsApp and tapping Restore, which hasn't been tested with an edited backup yet.",
+    steps: [
+      { title: "Make a backup with a key", manual: [
+          "In WhatsApp: Settings → Chats → Chat backup → End-to-end encrypted backup → “Use 64-digit encryption key instead”. I wrote the key down.",
+          "I tapped Back up and waited for it to finish.",
+          "I copied msgstore.db.crypt15 from Android/media/com.whatsapp/WhatsApp/Databases/ on the phone into my working folder." ],
+        what: "Get the backup file and its key. A file manager, or adb pull, can copy it without root." },
+      { title: "Check the file", cmd: "crypt", sub: "info", fill: { input: "{ws}/msgstore.db.crypt15" }, what: "Makes sure wakit can read it." },
+      { title: "Decrypt it", cmd: "crypt", sub: "decrypt", fill: { input: "{ws}/msgstore.db.crypt15", out: "{ws}/msgstore.db" },
+        what: "Paste the 64-digit key (spaces are fine). It isn't saved anywhere." },
+      { title: "Add history", alts: ADD_HISTORY("{ws}/msgstore.db"), what: "Dry run first, then Apply." },
+      { title: "Seal it again", cmd: "crypt", sub: "encrypt",
+        fill: { input: "{ws}/msgstore.db", like: "{ws}/msgstore.db.crypt15", out: "{ws}/new/msgstore.db.crypt15" },
+        what: "Uses the original file as the template, and checks the result by decrypting it again." },
+      { title: "Restore on the phone", manual: [
+          "I kept a copy of the original msgstore.db.crypt15.",
+          "I copied new/msgstore.db.crypt15 into the same Databases folder on the phone, replacing the old one.",
+          "I reinstalled WhatsApp (or cleared its data), verified my number and tapped Restore." ],
+        what: "WhatsApp restores the newest backup it finds." },
+    ] },
+  { id: "merge", icon: "🧩", title: "Merge two Android databases", root: true,
+    short: "Copy the history of an old msgstore.db (old phone, mod, backup) into the current one.",
+    intro: "Adds every message the current database is missing, with media, replies and reactions, without duplicates.",
+    steps: [
+      { title: "Copy the current databases", cmd: "device", sub: "pull", fill: { out: "{ws}/phone" }, what: "Copies WhatsApp's databases off the rooted phone." },
+      { title: "Merge", cmd: "merge", fill: { new: "{ws}/phone/msgstore.db" }, show: ["old", "fuzzy"],
+        what: "Pick the old database. Dry run, then Apply. “Skip near-duplicates” also skips messages that came in through exports." },
+      { title: "Stickers too", cmd: "stickers", optional: true, fill: { db: "{ws}/phone/stickers.db", files_out: "{ws}/Stickers" },
+        what: "Favourite stickers from the old stickers.db." },
+      { title: "Put it back", cmd: "device", sub: "install", fill: { db: "{ws}/phone/msgstore.db" }, what: "Copies the database back and starts WhatsApp." },
+    ] },
+];
 
-let SCHEMA = null, current = null, poll = null;
+let SCHEMA = null, poll = null;
 
-function navLink(label, small, onClick, key) {
-  const a = h("a", { "data-key": key, onclick: onClick, href: "#" + TOKEN }, h("b", {}, label), small ? h("small", {}, small) : null);
-  a.addEventListener("click", e => e.preventDefault());
-  return a;
+// ---- navigation ----------------------------------------------------------------------------------------------
+function go(view) {
+  store.set("view", view);
+  clearInterval(poll);
+  const v = $("#view"); v.innerHTML = "";
+  if (view.page === "guide" && GUIDES.find(g => g.id === view.id)) renderGuide(v, view.id);
+  else if (view.page === "tool" && SCHEMA.commands.find(c => c.name === view.cmd)) renderTool(v, view.cmd, view.sub);
+  else { view = { page: "home" }; renderHome(v); }
+  document.querySelectorAll("nav .navbtn").forEach(b => b.classList.toggle("active", b.dataset.key === keyOf(view)));
+  if (view.page === "tool") $("nav details").open = true;
+  $("#main").scrollTop = 0; window.scrollTo(0, 0);
+  $("#nav").classList.remove("open"); $("#menu").setAttribute("aria-expanded", false);
+}
+const keyOf = v => v.page === "guide" ? "g:" + v.id : v.page === "tool" ? "t:" + v.cmd : "home";
+function navBtn(title, small, view) {
+  return h("button", { class: "navbtn", "data-key": keyOf(view), onclick: () => go(view) }, h("b", {}, title), small ? h("small", {}, small) : null);
 }
 function buildNav() {
   const nav = $("#nav"); nav.innerHTML = "";
-  nav.append(h("h4", {}, "Start here"), navLink("Guides", "Step-by-step workflows", () => showGuides(), "guides"));
-  for (const c of SCHEMA.commands.filter(c => c.section === "Start")) nav.append(navLink(c.name, c.summary, () => showCommand(c.name), c.name));
+  nav.append(h("h4", {}, "Start"), navBtn("Home", "What do you want to do?", { page: "home" }));
+  nav.append(h("h4", {}, "Guides"), ...GUIDES.map(g => navBtn(g.title, g.noroot ? "No root needed" : g.root ? "Rooted Android" : "", { page: "guide", id: g.id })));
+  const all = h("details", { open: store.get("navtools", false) }, h("summary", {}, "All tools"));
+  all.addEventListener("toggle", () => store.set("navtools", all.open));
   for (const section of ["Start", "Android", "iPhone", "Devices"]) {
     const cmds = SCHEMA.commands.filter(c => c.section === section);
-    if (!cmds.length || section === "Start") continue;
-    nav.append(h("h4", {}, section));
-    for (const c of cmds) nav.append(navLink(c.name, c.summary, () => showCommand(c.name), c.name));
+    if (!cmds.length) continue;
+    all.append(h("div", { class: "sub" }, section === "Start" ? "Check" : section));
+    for (const c of cmds) all.append(navBtn(TITLES[c.name] || c.name, "wakit " + c.name, { page: "tool", cmd: c.name }));
   }
-}
-function mark(key) { document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.dataset.key === key)); }
-
-function showGuides() {
-  current = null; mark("guides");
-  const v = $("#view"); v.innerHTML = "";
-  v.append(h("h1", {}, "Move your WhatsApp history"),
-    h("p", { class: "lead" }, "Pick what you want to do. Each step opens the matching tool with its options. Every tool is a dry run until you press Apply, and makes a backup before it writes."));
-  v.append(h("div", { class: "note info" }, "Your chats never leave this computer: this page only talks to the wakit program running here."));
-  const grid = h("div", { class: "grid" });
-  for (const g of GUIDES) {
-    grid.append(h("div", { class: "card guide" },
-      h("h2", {}, g.title), h("div", { class: "help", style: "color:var(--muted);font-size:12px;margin:-6px 0 8px" }, g.tag),
-      h("p", { style: "margin:0 0 6px" }, g.intro),
-      g.warn ? h("div", { class: "note warn" }, g.warn) : null,
-      h("ol", {}, g.steps.map(([cmd, sub, text]) => h("li", {}, h("div", {},
-        h("a", { onclick: () => showCommand(cmd, sub) }, sub ? `${cmd} ${sub}` : cmd), " ", h("span", {}, "— " + text)))))));
-  }
-  v.append(grid);
+  nav.append(all);
 }
 
-function fieldEl(cmd, f, values) {
-  const id = `f-${cmd}-${f.dest}`;
-  const val = values[f.dest] ?? f.default ?? "";
-  if (f.kind === "bool") {
-    return h("div", { class: "field check" },
-      h("input", { type: "checkbox", id, "data-dest": f.dest, checked: !!values[f.dest] }),
-      h("div", {}, h("label", { for: id, style: "margin:0" }, f.flag.replace(/^--/, "").replace(/-/g, " "), h("code", {}, f.flag)), h("div", { class: "help" }, f.help)));
-  }
-  let input;
-  if (f.kind === "choice") {
-    input = h("select", { id, "data-dest": f.dest }, ["", ...f.choices].map(c => h("option", { value: c, selected: String(val) === String(c) }, c || "(default)")));
+// ---- home ----------------------------------------------------------------------------------------------------
+function renderHome(v) {
+  v.append(h("h1", {}, "What do you want to do?"),
+    h("p", { class: "lead" }, "Pick a goal and wakit walks you through it, one step at a time. Nothing is changed until you press Apply, and every change makes a backup first."));
+  const rooted = store.get("rooted", null);
+  const goals = h("div", { class: "goals" });
+  const paint = () => {
+    goals.innerHTML = "";
+    const r = store.get("rooted", null);
+    for (const g of GUIDES) {
+      const dim = (r === false && g.root && !g.noroot) || (r === true && g.noroot);
+      goals.append(h("button", { class: "card goal" + (dim ? " dim" : ""), onclick: () => go({ page: "guide", id: g.id }) },
+        h("div", { class: "icon", "aria-hidden": "true" }, g.icon), h("h2", {}, g.title), h("p", {}, g.short), tagsOf(g),
+        h("span", { class: "go" }, progressText(g))));
+    }
+  };
+  const chips = h("div", { class: "ask" }, h("b", {}, "Is your Android phone rooted?"),
+    [["Yes", true], ["No", false], ["Not sure", null]].map(([t, val]) => h("button", { class: "chip" + (rooted === val ? " active" : ""),
+      onclick: e => { store.set("rooted", val); chips.querySelectorAll(".chip").forEach(c => c.classList.remove("active")); e.currentTarget.classList.add("active"); paint(); hint.hidden = val !== null; } }, t)));
+  const hint = h("div", { class: "note info", hidden: rooted !== null }, "If you didn't root it yourself, it isn't rooted. The “No root” guides work on any phone. The iPhone side never needs a jailbreak.");
+  v.append(chips, hint, goals);
+  paint();
+  v.append(h("div", { class: "extras" },
+    h("div", { class: "card" }, h("div", { class: "icon", style: "font-size:22px" }, "🩺"), h("div", { style: "flex:1" },
+      h("b", {}, "Not sure what a file is?"), h("p", {}, "Check any database, backup or export first.")),
+      h("button", { class: "btn", onclick: () => go({ page: "tool", cmd: "doctor" }) }, "Check a file")),
+    h("div", { class: "card" }, h("div", { class: "icon", style: "font-size:22px" }, "🔒"), h("div", {},
+      h("b", {}, "Your chats stay here"), h("p", {}, "This page only talks to the wakit program on this computer. Nothing is uploaded.")))));
+}
+function tagsOf(g) {
+  return h("div", { class: "tags" }, g.root ? h("span", { class: "tag root" }, "Rooted Android") : null,
+    g.noroot ? h("span", { class: "tag noroot" }, "No root") : null, g.exp ? h("span", { class: "tag exp" }, "Experimental") : null);
+}
+function progressText(g) {
+  const done = store.get(`done:${g.id}`, []).length;
+  return done ? `Continue (${done} of ${g.steps.length} done) →` : "Start →";
+}
+
+// ---- a guide: working folder, steps on the left, the current step on the right ---------------------------------
+function wsOf(g) { return store.get(`ws:${g.id}`, `${SCHEMA.home}/wakit/${g.id}`); }
+const fillIn = (obj, ws) => Object.fromEntries(Object.entries(obj || {}).map(([k, t]) => [k, t.replace("{ws}", ws)]));
+
+function renderGuide(v, id, at) {
+  const g = GUIDES.find(x => x.id === id);
+  const done = new Set(store.get(`done:${id}`, []));
+  let cur = at ?? store.get(`step:${id}`, Math.max(0, g.steps.findIndex((_, i) => !done.has(i))));
+  if (cur < 0 || cur >= g.steps.length) cur = 0;
+  store.set(`step:${id}`, cur);
+  v.innerHTML = "";
+  v.append(h("button", { class: "crumb", onclick: () => go({ page: "home" }) }, "← All goals"),
+    h("h1", {}, g.title), h("div", { style: "margin:0 0 10px" }, tagsOf(g)), h("p", { class: "lead" }, g.intro));
+  if (g.warn) v.append(h("div", { class: "note warn" }, g.warn));
+
+  const wsInput = h("input", { type: "text", id: "ws", value: wsOf(g), spellcheck: "false", autocomplete: "off" });
+  const setWs = () => {
+    const val = wsInput.value.trim().replace(/\/+$/, "");
+    if (!val || val === wsOf(g)) return;
+    store.set(`ws:${id}`, val);
+    g.steps.forEach((s, i) => (s.alts || [s]).forEach((_, j) => store.del(`vals:g:${id}:${i}:${j}`)));
+    renderGuide(v, id, cur);
+  };
+  wsInput.addEventListener("change", setWs);
+  v.append(h("div", { class: "card ws" }, h("label", { for: "ws" }, "Working folder"),
+    h("div", { class: "row" }, wsInput, h("button", { class: "btn", onclick: () => pick(wsInput, { folder: true, then: setWs }) }, "Browse…")),
+    h("button", { class: "btn ghost", onclick: async () => { if (await ask("Start over?", "This clears the ticks on every step of this guide. Your files stay where they are.", "Start over")) { store.del(`done:${id}`); store.del(`step:${id}`); g.steps.forEach((s, i) => store.del(`checks:${id}:${i}`)); renderGuide(v, id, 0); } } }, "Start over"),
+    h("small", {}, "wakit keeps this guide's files here and fills in each step's paths for you. You can still change any of them.")));
+
+  const steps = h("ol", { class: "card steps", "aria-label": "Steps" }, g.steps.map((s, i) =>
+    h("li", { class: (i === cur ? "cur " : "") + (done.has(i) ? "done" : "") },
+      h("button", { onclick: () => renderGuide(v, id, i), "aria-current": i === cur ? "step" : false },
+        h("span", { class: "num" }, done.has(i) ? "✓" : i + 1), h("span", {}, s.title, s.optional ? h("small", {}, "optional") : s.skippable ? h("small", {}, "can skip") : null)))));
+  const panel = h("div", { class: "card" });
+  v.append(h("div", { class: "guide" }, steps, panel));
+
+  const s = g.steps[cur];
+  const markDone = (yes = true) => { yes ? done.add(cur) : done.delete(cur); store.set(`done:${id}`, [...done]); };
+  const next = () => renderGuide(v, id, Math.min(cur + 1, g.steps.length - 1));
+  const last = cur === g.steps.length - 1;
+  panel.append(h("div", { class: "stepno" }, `Step ${cur + 1} of ${g.steps.length}` + (s.optional ? " · optional" : "")), h("h2", {}, s.title), h("p", { class: "what" }, s.what));
+  if (s.tip) panel.append(h("div", { class: "note info" }, s.tip));
+
+  const nextBtn = h("button", { class: "btn" + (done.has(cur) ? " primary" : ""), onclick: () => { if (s.manual) markDone(); if (last) { markDone(); go({ page: "home" }); } else next(); } },
+    last ? "Finish" : (s.manual ? "Done, next step →" : "Next step →"));
+  const stepnav = h("div", { class: "stepnav" },
+    h("button", { class: "btn", disabled: cur === 0, onclick: () => renderGuide(v, id, cur - 1) }, "← Back"),
+    h("span", { class: "spacer" }),
+    (s.optional || s.skippable) && !last ? h("button", { class: "btn ghost", onclick: next }, "Skip") : null,
+    nextBtn);
+
+  if (s.manual) {
+    const checks = store.get(`checks:${id}:${cur}`, []);
+    const ul = h("ul", { class: "checklist" }, s.manual.map((t, i) => h("li", {}, h("label", {},
+      h("input", { type: "checkbox", checked: checks.includes(i), onchange: e => { const c = new Set(store.get(`checks:${id}:${cur}`, [])); e.target.checked ? c.add(i) : c.delete(i); store.set(`checks:${id}:${cur}`, [...c]); paintNext(); } }), h("span", {}, t)))));
+    const paintNext = () => { const all = store.get(`checks:${id}:${cur}`, []).length === s.manual.length; nextBtn.classList.toggle("primary", all); };
+    panel.append(ul); paintNext();
   } else {
-    input = h("input", { type: "text", id, "data-dest": f.dest, value: val, spellcheck: "false", autocomplete: "off", placeholder: f.kind === "path" ? "~/path/to/…" : "" });
+    const alts = s.alts || [s];
+    let pickAlt = Math.min(store.get(`alt:${id}:${cur}`, 0), alts.length - 1);
+    const host = h("div");
+    const show = j => {
+      pickAlt = j; store.set(`alt:${id}:${cur}`, j); host.innerHTML = "";
+      tabs && tabs.querySelectorAll(".tab").forEach((t, k) => { t.classList.toggle("active", k === j); t.setAttribute("aria-selected", k === j); });
+      const a = alts[j], ws = wsOf(g), key = `vals:g:${id}:${cur}:${j}`;
+      toolForm(host, { cmd: a.cmd, sub: a.sub, fixedSub: true, defaults: fillIn(a.fill, ws), browse: fillIn(a.browse, ws), show: [...(a.show || []), ...Object.keys(a.fill || {})], saveKey: key,
+        onFinish: r => { if (r.ok && !r.dry) { markDone(); steps.children[cur].classList.add("done"); steps.children[cur].querySelector(".num").textContent = "✓"; nextBtn.classList.add("primary"); } } });
+    };
+    const tabs = alts.length > 1 ? h("div", { class: "alts", role: "tablist" }, h("span", { style: "color:var(--muted);align-self:center;margin-right:4px" }, "Add from:"),
+      alts.map((a, j) => h("button", { class: "tab", role: "tab", onclick: () => show(j) }, a.label))) : null;
+    if (tabs) panel.append(tabs);
+    panel.append(host); show(pickAlt);
   }
-  const row = h("div", { class: "row" }, input, f.kind === "path" ? h("button", { class: "btn", type: "button", onclick: () => pick(input) }, "Browse…") : null);
-  return h("div", { class: "field" },
-    h("label", { for: id }, f.flag.replace(/^--/, "").replace(/-/g, " "), f.required ? h("span", { class: "req", title: "required" }, "*") : null, h("code", {}, f.flag)),
-    row, f.help ? h("div", { class: "help" }, f.help) : null);
+  panel.append(stepnav);
 }
 
-function showCommand(name, sub) {
+// ---- a tool on its own ---------------------------------------------------------------------------------------
+function renderTool(v, name, sub) {
   const c = SCHEMA.commands.find(x => x.name === name);
-  if (!c) return;
-  if (c.subcommands && !sub) sub = store.get(`sub:${name}`, c.subcommands[0].name);
-  current = { c, sub }; mark(name);
-  if (sub) store.set(`sub:${name}`, sub);
-  const v = $("#view"); v.innerHTML = "";
-  const values = store.get(`vals:${name}`, {});
-  v.append(h("h1", {}, `wakit ${name}`), h("p", { class: "lead" }, c.summary));
-  v.append(h("details", { class: "doc" }, h("summary", {}, "How it works"), h("pre", {}, c.doc)));
+  v.append(h("h1", {}, TITLES[name] || name), h("p", { class: "lead" }, c.summary, " ", h("code", {}, "wakit " + name)),
+    h("details", { class: "doc" }, h("summary", {}, "How it works"), h("pre", { class: "mono" }, c.doc)));
   const card = h("div", { class: "card" });
-  if (c.subcommands) {
-    card.append(h("div", { class: "tabs", role: "tablist" }, c.subcommands.map(s =>
-      h("button", { class: "tab" + (s.name === sub ? " active" : ""), role: "tab", "aria-selected": s.name === sub, onclick: () => showCommand(name, s.name), title: s.summary }, s.name))));
-    const s = c.subcommands.find(x => x.name === sub);
-    if (s) card.append(h("p", { style: "margin:-6px 0 14px;color:var(--muted)" }, s.summary));
-  }
-  const fs = [...c.fields, ...((c.subcommands || []).find(s => s.name === sub)?.fields || [])];
-  const hasApply = fs.some(f => f.dest === "apply");
-  const form = h("div", { class: "fields" }, fs.filter(f => f.dest !== "apply" && f.dest !== "yes").map(f => fieldEl(name, f, values)));
-  card.append(form);
-  const danger = DANGER[`${name}/${sub}`];
-  if (danger) card.append(h("div", { class: "note danger" }, danger));
-  const preview = h("div", { class: "cmdline", "aria-label": "command line" });
-  const runBtns = hasApply
-    ? [h("button", { class: "btn", onclick: () => run(false) }, "Dry run"), h("button", { class: "btn primary", onclick: () => run(true) }, "Apply")]
-    : [h("button", { class: "btn " + (danger ? "danger" : "primary"), onclick: () => run(true) }, danger ? "Run…" : "Run")];
-  card.append(h("div", { class: "actions" }, runBtns), preview);
   v.append(card);
-  const con = h("div", { class: "console", id: "console" },
-    h("div", { class: "bar" }, h("span", { class: "st", id: "st" }), h("span", { class: "spacer", style: "flex:1" }),
-      h("button", { class: "iconbtn", id: "stop", style: "color:inherit;border-color:rgba(255,255,255,.2)" }, "Stop")),
-    h("pre", { id: "out" }));
-  v.append(con);
+  toolForm(card, { cmd: name, sub, saveKey: `vals:${name}` });
+}
 
-  const collect = (apply) => {
+// ---- the form for one command: fields, run buttons, live output ----------------------------------------------
+function toolForm(host, o) {
+  const c = SCHEMA.commands.find(x => x.name === o.cmd);
+  let sub = o.sub;
+  if (c.subcommands && !sub) sub = store.get(`sub:${o.cmd}`, c.subcommands[0].name);
+  host.innerHTML = "";
+  if (c.subcommands && !o.fixedSub) {
+    store.set(`sub:${o.cmd}`, sub);
+    host.append(h("div", { class: "tabs", role: "tablist" }, c.subcommands.map(s =>
+      h("button", { class: "tab" + (s.name === sub ? " active" : ""), role: "tab", "aria-selected": s.name === sub, title: s.summary,
+        onclick: () => toolForm(host, { ...o, sub: s.name }) }, s.name))));
+  }
+  const sc = (c.subcommands || []).find(x => x.name === sub);
+  if (sc && !o.fixedSub) host.append(h("p", { style: "margin:-6px 0 16px;color:var(--muted)" }, sc.summary));
+  const fs = [...c.fields, ...(sc?.fields || [])];
+  const hasApply = fs.some(f => f.dest === "apply"), hasYes = fs.some(f => f.dest === "yes");
+  const saveKey = o.fixedSub || !sub ? o.saveKey : `${o.saveKey}:${sub}`;
+  const saved = store.get(saveKey, {});
+  const values = { ...(o.defaults || {}), ...saved };
+  const shown = f => f.required || (o.show || []).includes(f.dest) || (values[f.dest] && String(values[f.dest]) !== String(f.default ?? ""));
+  const visible = fs.filter(f => f.dest !== "apply" && f.dest !== "yes");
+  const main = visible.filter(shown), more = visible.filter(f => !shown(f));
+  const form = h("div");
+  form.append(h("div", { class: "fields" }, main.map(f => fieldEl(o.cmd, sub, f, values, o.browse))));
+  if (more.length) form.append(h("details", { class: "more" }, h("summary", {}, `More options (${more.length})`), h("div", { class: "fields" }, more.map(f => fieldEl(o.cmd, sub, f, values, o.browse)))));
+  host.append(form);
+  const danger = DANGER[`${o.cmd}/${sub}`];
+  if (danger) host.append(h("div", { class: "note danger" }, danger));
+
+  const why = h("span", { class: "why" });
+  const buttons = hasApply
+    ? [h("button", { class: "btn", onclick: () => run(false) }, "Dry run"), h("button", { class: "btn primary", onclick: () => run(true) }, "Apply changes")]
+    : [h("button", { class: "btn " + (danger ? "danger" : "primary"), onclick: () => run(true) }, danger ? "Run…" : "Run")];
+  const cmdline = h("div", { class: "cmdline mono" });
+  const copyBtn = h("button", { class: "btn", onclick: () => navigator.clipboard?.writeText(cmdline.firstChild?.textContent || "").then(() => { copyBtn.textContent = "Copied"; setTimeout(() => copyBtn.textContent = "Copy", 1200); }) }, "Copy");
+  host.append(h("div", { class: "actions" }, buttons, why),
+    h("details", { class: "cmd", open: store.get("showcmd", false), ontoggle: e => store.set("showcmd", e.target.open) }, h("summary", {}, "Command line"), cmdline));
+  const out = h("pre", { "aria-live": "polite" }), st = h("span", { class: "st" });
+  const stop = h("button", { class: "iconbtn" }, "Stop"), copyLog = h("button", { class: "iconbtn", onclick: () => navigator.clipboard?.writeText(out.textContent) }, "Copy log");
+  const con = h("div", { class: "console" }, h("div", { class: "bar" }, st, h("span", { class: "spacer" }), copyLog, stop), out);
+  const result = h("div", { class: "result" });
+  host.append(con, result);
+
+  const collect = apply => {
     const args = {};
     form.querySelectorAll("[data-dest]").forEach(el => { args[el.dataset.dest] = el.type === "checkbox" ? el.checked : el.value.trim(); });
-    store.set(`vals:${name}`, args);
+    store.set(saveKey, Object.fromEntries(Object.entries(args).filter(([k]) => !SECRET.has(k))));
     if (apply && hasApply) args.apply = true;
-    if (apply && fs.some(f => f.dest === "yes")) args.yes = true;
-    return { cmd: name, sub, args, serial: $("#serial").value.trim() };
+    if (apply && hasYes) args.yes = true;
+    return { cmd: o.cmd, sub, args, serial: $("#serial").value.trim() };
   };
   const refresh = async () => {
-    try { const r = await api("/api/preview", collect(false)); preview.textContent = "wakit " + r.argv.map(q).join(" "); }
-    catch (e) { preview.textContent = "— " + e.message; }
+    const missing = visible.filter(f => f.required && !form.querySelector(`[data-dest="${f.dest}"]`).value.trim());
+    buttons.forEach(b => b.disabled = missing.length > 0);
+    why.textContent = missing.length ? "Fill in: " + missing.map(f => label(o.cmd, sub, f)).join(", ") : "";
+    if (missing.length) { cmdline.textContent = "— fill in the required fields first"; return; }
+    try { const r = await api("/api/preview", collect(false)); cmdline.textContent = ""; cmdline.append("wakit " + r.argv.map(a => SECRET.has(argDest(r.argv, a)) ? "•••" : q(a)).join(" "), copyBtn); }
+    catch (e) { cmdline.textContent = "— " + e.message; }
   };
   form.addEventListener("input", refresh); form.addEventListener("change", refresh); refresh();
 
   async function run(apply) {
+    if (danger && !(await ask("Are you sure?", danger, "Yes, go ahead", true))) return;
+    if (apply && hasApply && !(await ask("Write the changes?", "wakit makes a backup of the file first.", "Apply changes"))) return;
     const req = collect(apply);
-    if (danger && !confirm(danger + "\n\nContinue?")) return;
-    if (apply && hasApply && !confirm("Write the changes? (a backup is made first)")) return;
-    const out = $("#out"), st = $("#st");
-    con.classList.add("show"); out.textContent = ""; st.className = "st run"; st.textContent = "running…";
+    con.classList.add("show"); out.textContent = ""; result.innerHTML = ""; st.className = "st run"; st.textContent = "running…";
+    buttons.forEach(b => b.disabled = true);
     let job;
-    try { job = await api("/api/run", req); } catch (e) { st.className = "st bad"; st.textContent = e.message; return; }
-    out.textContent = "$ wakit " + job.argv.map(q).join(" ") + "\n";
-    $("#stop").onclick = () => api("/api/stop", { id: job.id });
+    try { job = await api("/api/run", req); } catch (e) { st.className = "st bad"; st.textContent = e.message; buttons.forEach(b => b.disabled = false); return; }
+    out.append(h("span", { class: "l-cmd" }, "$ wakit " + job.argv.map(a => SECRET.has(argDest(job.argv, a)) ? "•••" : q(a)).join(" ") + "\n"));
+    stop.onclick = () => api("/api/stop", { id: job.id });
     let since = 0; clearInterval(poll);
     poll = setInterval(async () => {
       const r = await api(`/api/job?id=${job.id}&since=${since}`).catch(() => null);
       if (!r) return;
       since = r.next;
-      if (r.lines.length) { const atEnd = out.scrollTop + out.clientHeight >= out.scrollHeight - 8; out.textContent += r.lines.join("\n") + "\n"; if (atEnd) out.scrollTop = out.scrollHeight; }
-      if (r.code !== null) { clearInterval(poll); st.className = "st " + (r.code === 0 ? "ok" : "bad"); st.textContent = r.code === 0 ? "finished" : `failed (exit ${r.code})`; }
+      if (r.lines.length) {
+        const atEnd = out.scrollTop + out.clientHeight >= out.scrollHeight - 8;
+        for (const line of r.lines) out.append(h("span", { class: lineClass(line) }, line + "\n"));
+        if (atEnd) out.scrollTop = out.scrollHeight;
+      }
+      if (r.code !== null) {
+        clearInterval(poll); buttons.forEach(b => b.disabled = false);
+        const ok = r.code === 0, dry = hasApply && !apply;
+        st.className = "st " + (ok ? "ok" : "bad"); st.textContent = ok ? "finished" : `failed (exit ${r.code})`;
+        result.append(h("div", { class: "note " + (ok ? "info" : "danger") }, !ok ? "That didn't work. The red lines above say why. Nothing was half-written: wakit checks before it changes anything."
+          : dry ? "Dry run finished. Nothing was changed. If the numbers above look right, press “Apply changes”." : "Done."));
+        o.onFinish && o.onFinish({ ok, dry });
+      }
     }, 400);
   }
 }
-const q = s => /^[\w@%+=:,./~-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`;
+// which option an argv value belongs to (to hide secrets in the preview)
+const argDest = (argv, a) => { const i = argv.indexOf(a); return i > 0 && argv[i - 1].startsWith("--") ? argv[i - 1].slice(2).replace(/-/g, "_") : ""; };
+const lineClass = l => /^(error|wakit: error|traceback)/i.test(l) ? "l-bad" : /^(warning|note)\b/i.test(l) ? "l-warn" : /^(done|ready|saved|wrote|installed|pulled|tip|next)\b/i.test(l) ? "l-good" : "";
 
-// file / folder picker over the local server
-let pickTarget = null, pickPath = null, pickSel = null;
-async function pick(input) {
-  pickTarget = input; pickSel = null;
-  await openDir(input.value.trim() || store.get("lastdir", SCHEMA.home));
-  $("#modal").classList.add("show"); $("#pk-ok").focus();
+function fieldEl(cmd, sub, f, values, browse) {
+  const id = `f-${cmd}-${sub || ""}-${f.dest}`;
+  const name = label(cmd, sub, f);
+  if (f.kind === "bool") {
+    return h("div", { class: "field check" },
+      h("input", { type: "checkbox", id, "data-dest": f.dest, checked: !!values[f.dest] }),
+      h("div", {}, h("label", { for: id }, name), h("div", { class: "help" }, f.help, " ", h("code", {}, f.flag))));
+  }
+  const val = SECRET.has(f.dest) ? "" : (values[f.dest] ?? "");  // defaults stay placeholders: the command fills them in
+  let input;
+  if (f.kind === "choice") {
+    input = h("select", { id, "data-dest": f.dest }, ["", ...f.choices].map(c => h("option", { value: c, selected: String(val) === String(c) }, c || "(automatic)")));
+  } else {
+    input = h("input", { type: f.dest === "password" ? "password" : "text", id, "data-dest": f.dest, value: val, spellcheck: "false", autocomplete: "off",
+      placeholder: f.dest === "key" ? "64-digit key, or a key file" : f.kind === "path" ? "Choose with Browse, or type a path" : f.default != null ? String(f.default) : "" });
+  }
+  const browseBtn = f.kind === "path" ? h("button", { class: "btn", type: "button", onclick: () => pick(input, { from: browse?.[f.dest] }) }, "Browse…") : null;
+  return h("div", { class: "field" },
+    h("label", { for: id }, name, f.required ? h("span", { class: "req", title: "required" }, "*") : null, h("code", {}, f.flag)),
+    h("div", { class: "row" }, input, browseBtn), f.help ? h("div", { class: "help" }, f.help) : null);
+}
+
+// ---- dialogs -------------------------------------------------------------------------------------------------
+function ask(title, text, yes = "OK", danger = false) {
+  return new Promise(resolve => {
+    const d = $("#dlg"), y = $("#dlg-yes"), n = $("#dlg-no");
+    $("#dlg-title").textContent = title; $("#dlg-text").textContent = text; y.textContent = yes;
+    y.className = "btn " + (danger ? "danger" : "primary");
+    const done = v => { d.classList.remove("show"); y.onclick = n.onclick = d.onkeydown = null; resolve(v); };
+    y.onclick = () => done(true); n.onclick = () => done(false);
+    d.onkeydown = e => { if (e.key === "Escape") done(false); };
+    d.classList.add("show"); (danger ? n : y).focus();
+  });
+}
+
+let pk = null;
+async function pick(input, opts = {}) {
+  pk = { input, opts, sel: null, path: null, items: [] };
+  const start = input.value.trim() || opts.from || store.get("lastdir", SCHEMA.home);
+  $("#pk-title").textContent = opts.folder ? "Choose a folder" : "Choose a file or folder";
+  $("#pk-filter").value = "";
+  await openDir(start);
+  $("#pk").classList.add("show"); $("#pk-filter").focus();
 }
 async function openDir(path) {
-  const r = await api("/api/ls?path=" + encodeURIComponent(path));
-  pickPath = r.path; pickSel = null; store.set("lastdir", r.path);
-  $("#pk-path").textContent = r.path; $("#pk-up").onclick = () => openDir(r.parent);
+  let r;
+  try { r = await api("/api/ls?path=" + encodeURIComponent(path)); } catch (e) { return; }
+  pk.path = r.path; pk.sel = null; pk.items = r.items; pk.error = r.error; store.set("lastdir", r.path);
+  $("#pk-path").value = r.path; $("#pk-up").onclick = () => openDir(r.parent); $("#pk-filter").value = "";
+  paintList();
+}
+function paintList() {
   const ul = $("#pk-list"); ul.innerHTML = "";
-  if (r.error) ul.append(h("li", { class: "empty" }, r.error));
-  if (!r.items.length && !r.error) ul.append(h("li", { class: "empty" }, "empty folder"));
-  for (const it of r.items) {
-    const li = h("li", { tabindex: "0" }, it.dir ? "📁" : "📄", it.name);
-    li.onclick = () => { ul.querySelectorAll("li").forEach(x => x.classList.remove("sel")); li.classList.add("sel"); pickSel = r.path.replace(/\/$/, "") + "/" + it.name; };
-    li.ondblclick = () => it.dir ? openDir(pickSel) : choose(pickSel);
+  const f = $("#pk-filter").value.trim().toLowerCase();
+  const items = pk.items.filter(it => !f || it.name.toLowerCase().includes(f));
+  $("#pk-sel").textContent = pk.sel || (pk.opts.folder || !pk.sel ? pk.path : "");
+  if (pk.error) ul.append(h("li", { class: "empty" }, pk.error));
+  if (!items.length && !pk.error) ul.append(h("li", { class: "empty" }, f ? "nothing matches" : "empty folder"));
+  for (const it of items) {
+    const full = pk.path.replace(/[\\/]$/, "") + "/" + it.name;
+    const ext = !it.dir && it.name.includes(".") ? it.name.split(".").pop() : "";
+    const li = h("li", { tabindex: "0", role: "option" }, it.dir ? "📁" : "📄", h("span", {}, it.name), ext ? h("span", { class: "ext" }, ext) : null);
+    li.onclick = () => { ul.querySelectorAll("li").forEach(x => x.classList.remove("sel")); li.classList.add("sel"); pk.sel = full; $("#pk-sel").textContent = full; };
+    li.ondblclick = () => it.dir ? openDir(full) : choose(full);
     li.onkeydown = e => { if (e.key === "Enter") li.ondblclick(); };
     ul.append(li);
   }
 }
-function choose(path) { pickTarget.value = path; pickTarget.dispatchEvent(new Event("input", { bubbles: true })); $("#modal").classList.remove("show"); pickTarget.focus(); }
-$("#pk-ok").onclick = () => choose(pickSel || pickPath);
-$("#pk-cancel").onclick = () => $("#modal").classList.remove("show");
-$("#modal").addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").classList.remove("show"); });
+function choose(path) {
+  pk.input.value = path; pk.input.dispatchEvent(new Event("input", { bubbles: true })); pk.input.dispatchEvent(new Event("change", { bubbles: true }));
+  $("#pk").classList.remove("show"); pk.input.focus(); pk.opts.then && pk.opts.then();
+}
+$("#pk-ok").onclick = () => choose(pk.sel || pk.path);
+$("#pk-cancel").onclick = () => $("#pk").classList.remove("show");
+$("#pk-filter").oninput = paintList;
+$("#pk-path").onkeydown = e => { if (e.key === "Enter") openDir(e.target.value.trim()); };
+$("#pk").addEventListener("keydown", e => { if (e.key === "Escape") $("#pk").classList.remove("show"); });
 
-// theme
+// ---- connected phones ----------------------------------------------------------------------------------------
+let DEV = null;
+async function refreshDevices() {
+  try { DEV = await api("/api/status"); } catch { return; }
+  const a = DEV.android, ready = a.filter(d => d.state === "device"), waiting = a.filter(d => d.state !== "device");
+  const serial = $("#serial").value.trim();
+  let dot = "off", text = "No phone connected";
+  if (ready.length === 1) { dot = "on"; text = ready[0].model || ready[0].serial; }
+  else if (ready.length > 1) { dot = serial ? "on" : "wait"; text = serial ? (a.find(d => d.serial === serial)?.model || serial) : `${ready.length} phones: choose one`; }
+  else if (waiting.length) { dot = "wait"; text = waiting[0].state === "unauthorized" ? "Tap “Allow” on the phone" : `Phone ${waiting[0].state}`; }
+  else if (!DEV.adb && !DEV.iphone.length) text = "adb not installed";
+  if (DEV.iphone.length) { text = (ready.length || waiting.length ? text + " · " : "") + (DEV.iphone[0].name || "iPhone"); if (dot === "off") dot = "on"; }
+  $("#devdot").className = "dot " + dot; $("#devtext").textContent = text;
+  const la = $("#dev-android"); la.innerHTML = "";
+  if (!DEV.adb) la.append(h("li", {}, h("div", { class: "grow" }, "adb isn't installed", h("small", {}, "macOS: brew install android-platform-tools · Linux: apt install adb · Windows: Android SDK Platform-Tools"))));
+  else if (!a.length) la.append(h("li", {}, h("div", { class: "grow" }, "Nothing connected", h("small", {}, "Plug in by USB with USB debugging on (Settings → Developer options)."))));
+  for (const d of a) la.append(h("li", {}, h("span", { class: "dot " + (d.state === "device" ? "on" : "wait") }),
+    h("div", { class: "grow" }, d.model || d.serial, h("small", {}, d.state === "device" ? d.serial : d.state === "unauthorized" ? "tap “Allow” on the phone" : d.state)),
+    a.length > 1 && d.state === "device" ? h("button", { class: "btn", onclick: () => { $("#serial").value = d.serial; store.set("serial", d.serial); refreshDevices(); } }, serial === d.serial ? "In use" : "Use") : null));
+  const li = $("#dev-iphone"); li.innerHTML = "";
+  if (!DEV.idevice) li.append(h("li", {}, h("div", { class: "grow" }, "libimobiledevice isn't installed", h("small", {}, "Only needed to back up or restore an iPhone. macOS: brew install libimobiledevice"))));
+  else if (!DEV.iphone.length) li.append(h("li", {}, h("div", { class: "grow" }, "Nothing connected", h("small", {}, "Plug in the iPhone and tap Trust."))));
+  for (const d of DEV.iphone) li.append(h("li", {}, h("span", { class: "dot on" }), h("div", { class: "grow" }, d.name || "iPhone", h("small", { class: "mono" }, d.udid))));
+}
+const pop = $("#devpop");
+$("#devpill").onclick = e => { e.stopPropagation(); const show = !pop.classList.contains("show"); pop.classList.toggle("show", show); $("#devpill").setAttribute("aria-expanded", show); if (show) refreshDevices(); };
+document.addEventListener("click", e => { if (!pop.contains(e.target)) { pop.classList.remove("show"); $("#devpill").setAttribute("aria-expanded", false); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") pop.classList.remove("show"); });
+$("#devrefresh").onclick = refreshDevices;
+$("#serial").value = store.get("serial", ""); $("#serial").oninput = e => store.set("serial", e.target.value.trim());
+
+// ---- theme ---------------------------------------------------------------------------------------------------
 const applyTheme = t => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; };
 applyTheme(store.get("theme", null));
 $("#theme").onclick = () => { const dark = matchMedia("(prefers-color-scheme: dark)").matches; const cur = document.documentElement.dataset.theme || (dark ? "dark" : "light"); const next = cur === "dark" ? "light" : "dark"; applyTheme(next); store.set("theme", next); };
-$("#serial").value = store.get("serial", ""); $("#serial").oninput = e => store.set("serial", e.target.value.trim());
+$("#home").onclick = () => go({ page: "home" });
+$("#menu").onclick = () => { const open = $("#nav").classList.toggle("open"); $("#menu").setAttribute("aria-expanded", open); };
 
 (async () => {
   try { SCHEMA = await api("/api/schema"); }
@@ -372,7 +818,9 @@ $("#serial").value = store.get("serial", ""); $("#serial").oninput = e => store.
   $("#ver").textContent = "v" + SCHEMA.version;
   buildNav();
   const [cmd, sub] = (new URLSearchParams(location.search).get("view") || "").split("/");
-  if (cmd) showCommand(cmd, sub); else showGuides();
+  go(cmd ? { page: "tool", cmd, sub } : store.get("view", { page: "home" }));
+  refreshDevices();
+  setInterval(() => { if (!document.hidden) refreshDevices(); }, 15000);
 })();
 </script>
 </body>

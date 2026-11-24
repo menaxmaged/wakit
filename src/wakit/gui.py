@@ -7,7 +7,7 @@ example:
   wakit gui
   wakit gui --port 8765 --no-browser
 """
-import argparse, importlib, json, os, secrets, string, subprocess, sys, threading, webbrowser
+import argparse, importlib, json, os, secrets, shutil, string, subprocess, sys, threading, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -15,7 +15,7 @@ from . import __version__
 from .cli import COMMANDS
 
 PATHS = {"db", "export", "backup", "media", "out", "wa_db", "media_out", "old", "new", "src", "from_files",
-         "files_out", "input", "like", "key", "path"}
+         "files_out", "input", "like", "key", "path", "apk", "apks", "save_to", "stickers_db"}
 JOBS, LOCK = {}, threading.Lock()
 
 
@@ -126,6 +126,38 @@ def listdir(path):
     return {"path": path, "parent": os.path.dirname(path), "items": items}
 
 
+def parse_adb_devices(text):
+    """`adb devices -l` -> [{serial, state, model}]"""
+    out = []
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) < 2 or line.startswith(("*", "List of devices")):
+            continue
+        info = dict(p.split(":", 1) for p in parts[2:] if ":" in p)
+        out.append({"serial": parts[0], "state": parts[1], "model": info.get("model", "").replace("_", " ")})
+    return out
+
+
+def quick(cmd):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=6, stdin=subprocess.DEVNULL)
+        return r.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def status():
+    """which phones are plugged in - for the header of the page"""
+    out = {"adb": bool(shutil.which("adb")), "idevice": bool(shutil.which("idevice_id")), "android": [], "iphone": []}
+    if out["adb"]:
+        out["android"] = parse_adb_devices(quick(["adb", "devices", "-l"]))
+    if out["idevice"]:
+        for udid in quick(["idevice_id", "-l"]).split():
+            name = quick(["ideviceinfo", "-u", udid, "-k", "DeviceName"]).strip() if shutil.which("ideviceinfo") else ""
+            out["iphone"].append({"udid": udid, "name": name})
+    return out
+
+
 class Handler(BaseHTTPRequestHandler):
     token = ""
 
@@ -158,6 +190,8 @@ class Handler(BaseHTTPRequestHandler):
             return None if u.path.startswith("/api/") else self.send(404, {"error": "not found"})
         if u.path == "/api/schema":
             return self.send(200, schema())
+        if u.path == "/api/status":
+            return self.send(200, status())
         if u.path == "/api/ls":
             return self.send(200, listdir(q.get("path")))
         if u.path == "/api/job":
